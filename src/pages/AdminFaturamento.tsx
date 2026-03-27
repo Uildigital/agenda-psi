@@ -14,7 +14,8 @@ import {
   Banknote,
   CreditCard
 } from 'lucide-react';
-import { format, isSameMonth, parseISO, subMonths } from 'date-fns';
+import { format, isSameMonth, parseISO, subMonths, addMonths } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
 
 export default function AdminFaturamento() {
@@ -22,6 +23,7 @@ export default function AdminFaturamento() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [profile, setProfile] = useState<DoctorProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedMonth, setSelectedMonth] = useState<Date>(new Date());
   
   // Privacy defaults to true (HIDDEN)
   const [privacyMode, setPrivacyMode] = useState(true);
@@ -68,18 +70,19 @@ export default function AdminFaturamento() {
     const pt = patients.find(p => p.id === appt.patient_id || p.whatsapp === appt.whatsapp);
     return pt?.base_session_value || profile?.default_session_value || 160;
   };
-
-  const finished = appointments.filter(a => a.status === 'finished');
-  const currentMonthAppts = finished.filter(a => isSameMonth(parseISO(a.appointment_date), new Date()));
   
-  const totalPaid = currentMonthAppts.filter(a => a.payment_status === 'paid').reduce((acc, a) => acc + getPrice(a), 0);
-  const totalUnpaid = currentMonthAppts.filter(a => a.payment_status !== 'paid').reduce((acc, a) => acc + getPrice(a), 0);
+  // Filtering by selected month
+  const finished = appointments.filter(a => a.status === 'finished');
+  const filteredAppts = finished.filter(a => isSameMonth(parseISO(a.appointment_date), selectedMonth));
+  
+  const totalPaid = filteredAppts.filter(a => a.payment_status === 'paid').reduce((acc, a) => acc + getPrice(a), 0);
+  const totalUnpaid = filteredAppts.filter(a => a.payment_status !== 'paid').reduce((acc, a) => acc + getPrice(a), 0);
   const totalMonth = totalPaid + totalUnpaid;
   
-  const lastMonthAppts = finished.filter(a => isSameMonth(parseISO(a.appointment_date), subMonths(new Date(), 1)));
-  const totalPaidLastMonth = lastMonthAppts.filter(a => a.payment_status === 'paid').reduce((acc, a) => acc + getPrice(a), 0);
+  const prevMonthAppts = finished.filter(a => isSameMonth(parseISO(a.appointment_date), subMonths(selectedMonth, 1)));
+  const totalPaidPrevMonth = prevMonthAppts.filter(a => a.payment_status === 'paid').reduce((acc, a) => acc + getPrice(a), 0);
   
-  const growth = totalPaidLastMonth > 0 ? Math.round(((totalPaid - totalPaidLastMonth) / totalPaidLastMonth) * 100) : 0;
+  const growth = totalPaidPrevMonth > 0 ? Math.round(((totalPaid - totalPaidPrevMonth) / totalPaidPrevMonth) * 100) : 0;
 
   const formatCurrency = (val: number) => {
     if (privacyMode) return 'R$ ••••••';
@@ -97,8 +100,24 @@ export default function AdminFaturamento() {
     <div className="space-y-10 md:space-y-12 animate-in fade-in duration-700 pb-24 px-2 sm:px-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
         <div>
-          <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tighter uppercase leading-none">Faturamento</h1>
-          <p className="text-slate-500 font-bold tracking-tight text-sm md:text-base mt-2">Visão orçamentária detalhada por recebimento.</p>
+           <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tighter uppercase leading-none">Faturamento</h1>
+           <div className="flex items-center gap-4 mt-4 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm w-fit">
+              <button 
+                onClick={() => setSelectedMonth(subMonths(selectedMonth, 1))}
+                className="p-2 hover:bg-slate-50 rounded-xl transition-colors text-slate-400"
+              >
+                 <Plus className="w-5 h-5 rotate-45" />
+              </button>
+              <span className="text-sm font-black uppercase tracking-widest text-slate-900 px-4">
+                 {format(selectedMonth, 'MMMM yyyy', { locale: ptBR })}
+              </span>
+              <button 
+                onClick={() => setSelectedMonth(addMonths(selectedMonth, 1))}
+                className="p-2 hover:bg-slate-50 rounded-xl transition-colors text-slate-400"
+              >
+                 <Plus className="w-5 h-5" />
+              </button>
+           </div>
         </div>
         <div className="flex flex-wrap items-center gap-4">
            <button 
@@ -110,7 +129,7 @@ export default function AdminFaturamento() {
              {privacyMode ? 'OCULTO' : 'VISÍVEL'}
            </button>
            <Link to="/admin/agenda?new=true" className="px-8 py-4 bg-slate-950 text-white rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition shadow-xl shadow-slate-950/30 flex items-center justify-center gap-3 active:scale-95">
-             <Plus className="w-5 h-5" /> Lançamento Manual
+             <Plus className="w-5 h-5" /> Lançamento
            </Link>
         </div>
       </div>
@@ -175,9 +194,9 @@ export default function AdminFaturamento() {
 
       <div className="bg-white rounded-[3.5rem] shadow-sm border border-slate-100 overflow-hidden">
          <div className="p-10 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-            <h3 className="font-black text-slate-900 uppercase text-[10px] tracking-[0.4em] flex items-center gap-3">
-               <Wallet className="w-5 h-5 text-brand-600" /> Fluxo de Caixa Mensal
-            </h3>
+             <h3 className="font-black text-slate-900 uppercase text-[10px] tracking-[0.4em] flex items-center gap-3">
+                <Wallet className="w-5 h-5 text-brand-600" /> Fluxo de Caixa: {format(selectedMonth, 'MMMM', { locale: ptBR })}
+             </h3>
             <button className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-brand-600 transition">
                <Download className="w-4 h-4" /> Exportar Balanço
             </button>
@@ -195,10 +214,10 @@ export default function AdminFaturamento() {
                <tbody className="divide-y divide-slate-50">
                   {loading ? (
                     <tr><td colSpan={4} className="p-20 text-center text-slate-400 font-bold">Carregando fluxo financeiro...</td></tr>
-                  ) : currentMonthAppts.length === 0 ? (
-                    <tr><td colSpan={4} className="p-20 text-center text-slate-400 font-bold uppercase text-[10px] tracking-widest">Sem movimentações este mês.</td></tr>
+                  ) : filteredAppts.length === 0 ? (
+                    <tr><td colSpan={4} className="p-20 text-center text-slate-400 font-bold uppercase text-[10px] tracking-widest">Sem movimentações em {format(selectedMonth, 'MMMM', { locale: ptBR })}.</td></tr>
                   ) : (
-                    currentMonthAppts.map(a => {
+                    filteredAppts.map(a => {
                       const MethodIcon = a.payment_method ? paymentMethods[a.payment_method as keyof typeof paymentMethods]?.icon || Wallet : Wallet;
                       const methodInfo = a.payment_method ? paymentMethods[a.payment_method as keyof typeof paymentMethods] : { label: 'Não Definido', color: 'text-slate-300' };
                       

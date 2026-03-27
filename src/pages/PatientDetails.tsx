@@ -12,7 +12,8 @@ import {
   Activity,
   Eye,
   EyeOff,
-  DollarSign
+  DollarSign,
+  Smartphone
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -156,25 +157,51 @@ PLANO: ${newSoap.plano}
            <button onClick={() => navigate(-1)} className="p-4 bg-white text-slate-400 rounded-2xl shadow-sm border border-slate-100 active:scale-90 transition-transform">
               <ArrowLeft className="w-6 h-6" />
            </button>
-           <div>
-              <h1 className="text-2xl md:text-3xl font-black text-slate-950 tracking-tighter uppercase leading-none">{patient.full_name}</h1>
-              <span className="text-slate-400 font-black text-[9px] uppercase tracking-widest mt-1">Status: Ativo na Clínica</span>
-           </div>
-        </div>
-        <div className="flex gap-2">
+            <div>
+               <h1 className="text-2xl md:text-3xl font-black text-slate-950 tracking-tighter uppercase leading-none">{patient.full_name}</h1>
+               <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest mt-1 inline-block ${patient.status === 'inactive' ? 'bg-slate-100 text-slate-400' : 'bg-green-50 text-green-600'}`}>
+                  Status: {patient.status === 'inactive' ? 'Inativo na Clínica' : 'Ativo na Clínica'}
+               </span>
+            </div>
+         </div>
+         <div className="flex gap-2">
+            <button 
+              onClick={async () => {
+                const newStatus = patient.status === 'active' ? 'inactive' : 'active';
+                const { error } = await supabase.from('patients').update({ status: newStatus }).eq('id', patient.id);
+                if (!error) {
+                  setPatient({ ...patient, status: newStatus });
+                }
+              }}
+              className={`p-4 rounded-2xl border transition shadow-sm flex items-center justify-center ${patient.status === 'inactive' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100 hover:text-amber-600 hover:bg-amber-50'}`}
+              title={patient.status === 'inactive' ? 'Ativar Paciente' : 'Desativar Paciente'}
+            >
+               <Activity className="w-6 h-6" />
+            </button>
            <button 
              onClick={togglePrivacy}
              className="flex-1 md:flex-none p-4 bg-white border border-slate-200 text-slate-400 rounded-2xl active:text-brand-600 transition shadow-sm flex items-center justify-center"
            >
              {privacyMode ? <Eye className="w-6 h-6" /> : <EyeOff className="w-6 h-6" />}
            </button>
-           <button 
-             onClick={() => setShowNewRecord(true)}
-             className="flex-[3] md:flex-none px-8 py-4 bg-brand-600 text-white rounded-[2rem] font-black text-xs uppercase tracking-widest hover:bg-brand-700 transition shadow-xl shadow-brand-500/30 flex items-center justify-center gap-3 active:scale-95"
-           >
-             <Plus className="w-4 h-4" /> Iniciar Evolução
-           </button>
-        </div>
+            <button 
+              onClick={() => {
+                const whatsapp = patient.whatsapp?.replace(/\D/g, '');
+                if (whatsapp) window.open(`https://wa.me/${whatsapp}`, '_blank');
+                else alert('WhatsApp não cadastrado para este paciente.');
+              }}
+              className="flex-1 md:flex-none p-4 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-2xl active:bg-emerald-100 transition shadow-sm flex items-center justify-center"
+              title="Contatar via WhatsApp"
+            >
+               <Smartphone className="w-6 h-6" />
+            </button>
+            <button 
+              onClick={() => setShowNewRecord(true)}
+              className="flex-[3] md:flex-none px-8 py-4 bg-brand-600 text-white rounded-[2rem] font-black text-xs uppercase tracking-widest hover:bg-brand-700 transition shadow-xl shadow-brand-500/30 flex items-center justify-center gap-3 active:scale-95"
+            >
+              <Plus className="w-4 h-4" /> Iniciar Evolução
+            </button>
+         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
