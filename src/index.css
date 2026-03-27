@@ -25,4 +25,29 @@
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }
+
+  /* Premium Design Tokens */
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)];
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-br from-slate-900 via-slate-800 to-slate-600;
+  }
+
+  .brand-gradient {
+    @apply bg-gradient-to-br from-brand-600 to-brand-400;
+  }
+
+  .premium-shadow {
+    box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.05);
+  }
+
+  .hover-elevate {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-brand-500/10;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }

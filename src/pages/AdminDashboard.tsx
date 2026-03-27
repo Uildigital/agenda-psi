@@ -129,12 +129,18 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="space-y-8 md:space-y-12 animate-in fade-in duration-700 pb-32">
+    <div className="relative space-y-8 md:space-y-12 animate-in fade-in duration-1000 pb-32">
       
+      {/* BACKGROUND DECORATIONS (DESKTOP) */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-40 select-none -z-10 hidden xl:block">
+        <div className="absolute top-[-5%] left-[-5%] w-[600px] h-[600px] bg-brand-500/10 rounded-full blur-[140px]"></div>
+        <div className="absolute bottom-[10%] right-[0%] w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-[100px]"></div>
+      </div>
+
       {/* Dynamic Welcome Heading */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tighter uppercase leading-none">Início</h1>
+          <h1 className="text-3xl md:text-6xl font-black text-slate-900 tracking-tighter uppercase leading-none text-gradient">Início</h1>
           <p className="text-slate-400 font-bold tracking-tight text-xs md:text-sm mt-2 flex items-center gap-2">
              <Calendar className="w-3.5 h-3.5" /> {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
           </p>
@@ -142,13 +148,13 @@ export default function AdminDashboard() {
         <div className="flex gap-2">
            <button 
              onClick={togglePrivacy}
-             className={`flex-1 md:flex-none h-14 md:px-6 bg-white border-2 rounded-2xl font-black text-[10px] uppercase tracking-widest transition shadow-sm flex items-center justify-center gap-3 ${privacyMode ? 'border-slate-100 text-slate-400' : 'border-brand-200 text-brand-700 bg-brand-50'}`}
+             className={`flex-1 md:flex-none h-14 md:px-6 bg-white/50 backdrop-blur-md border-2 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-sm flex items-center justify-center gap-3 active:scale-95 ${privacyMode ? 'border-slate-100 text-slate-400' : 'border-brand-200 text-brand-700 bg-brand-50'}`}
            >
              {privacyMode ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
              {privacyMode ? 'OCULTO' : 'VISÍVEL'}
            </button>
-           <Link to="/admin/agenda?new=true" className="flex-1 md:flex-none h-14 md:px-6 bg-brand-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-brand-700 transition shadow-xl shadow-brand-500/20 flex items-center justify-center gap-2">
-             <PlusCircle className="w-5 h-5" /> NOVO
+           <Link to="/admin/agenda?new=true" className="flex-1 md:flex-none h-14 md:px-6 bg-brand-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-brand-700 hover:shadow-2xl hover:shadow-brand-500/30 transition-all shadow-xl shadow-brand-500/20 flex items-center justify-center gap-2 active:scale-95">
+             <PlusCircle className="w-5 h-5" /> NOVO AGENDAMENTO
            </Link>
         </div>
       </div>
@@ -160,13 +166,13 @@ export default function AdminDashboard() {
           { label: 'Comparecimento', value: `${attendanceRate}%`, color: 'bg-emerald-600', icon: TrendingUp },
           { label: 'Novos', value: newsThisMonth, color: 'bg-amber-600', icon: Clock },
         ].map((stat, i) => (
-          <div key={i} className="bg-white p-6 md:p-10 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col justify-between">
-            <div className={`${stat.color} w-10 h-10 md:w-14 md:h-14 rounded-2xl md:rounded-3xl flex items-center justify-center text-white mb-6`}>
-               <stat.icon className="w-5 h-5 md:w-7 md:h-7" />
+          <div key={i} className="glass-card p-6 md:p-10 rounded-[2.5rem] premium-shadow flex flex-col justify-between hover-elevate group transition-all">
+            <div className={`${stat.color} w-10 h-10 md:w-16 md:h-16 rounded-2xl md:rounded-[1.5rem] flex items-center justify-center text-white mb-8 shadow-lg shadow-black/5`}>
+               <stat.icon className="w-5 h-5 md:w-8 md:h-8" />
             </div>
             <div>
-               <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">{stat.label}</p>
-               <h3 className="text-2xl md:text-3xl font-black text-slate-900">{stat.value}</h3>
+               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 group-hover:text-brand-600 transition-colors uppercase">{stat.label}</p>
+               <h3 className="text-2xl md:text-4xl font-black text-slate-900 text-gradient">{stat.value}</h3>
             </div>
           </div>
         ))}

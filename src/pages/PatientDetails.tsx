@@ -168,7 +168,13 @@ ${newSoap.plano || 'Seguimento terapêutico padrão.'}
   );
 
   return (
-    <div className="animate-in fade-in duration-800 pb-40 space-y-12">
+    <div className="relative min-h-screen animate-in fade-in duration-1000 pb-40 space-y-12">
+      
+      {/* BACKGROUND DECORATIONS (DESKTOP ONLY) */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-40 select-none -z-10 hidden xl:block">
+        <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] bg-brand-500/10 rounded-full blur-[140px] animate-pulse"></div>
+        <div className="absolute bottom-[-5%] left-[-5%] w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[120px]"></div>
+      </div>
       
       {/* PROFESSIONAL TITLE BAR */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8 pt-4">
@@ -178,7 +184,7 @@ ${newSoap.plano || 'Seguimento terapêutico padrão.'}
                </button>
                 <div>
                    <div className="flex flex-wrap items-center gap-3 mb-2">
-                      <h1 className="text-3xl md:text-6xl font-black text-slate-950 tracking-tighter uppercase leading-none">{patient.full_name}</h1>
+                   <h1 className="text-3xl md:text-6xl font-black text-slate-950 tracking-tighter uppercase leading-none text-gradient">{patient.full_name}</h1>
                       <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border mt-1 ${patient.status === 'inactive' ? 'bg-slate-100 text-slate-400 border-slate-200' : 'bg-brand-50 text-brand-600 border-brand-200'}`}>
                          {patient.status === 'inactive' ? 'Inativo' : 'Paciente em Acompanhamento'}
                       </span>
@@ -224,9 +230,9 @@ ${newSoap.plano || 'Seguimento terapêutico padrão.'}
         
         {/* SIDEBAR: PATIENT MASTER DATA */}
         <div className="xl:col-span-1 space-y-8">
-           <div className="bg-white rounded-[3rem] p-8 shadow-sm border border-slate-100 space-y-8 relative overflow-hidden">
-              <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.4em] flex items-center gap-3 border-b border-slate-50 pb-6 uppercase">
-                <User className="w-4 h-4 text-brand-600" /> Ficha Bio-Psico-Social
+           <div className="glass-card rounded-[3rem] p-8 space-y-8 relative overflow-hidden premium-shadow">
+              <h3 className="text-[10px] font-black text-brand-700 uppercase tracking-[0.4em] flex items-center gap-3 border-b border-slate-100/50 pb-6">
+                <User className="w-4 h-4" /> Ficha Bio-Psico-Social
               </h3>
               
               <div className="space-y-6">
@@ -320,29 +326,29 @@ ${newSoap.plano || 'Seguimento terapêutico padrão.'}
            
            {/* PC: QUICK CLINICAL KPI DASHBOARD */}
            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 hidden md:grid">
-              <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                 <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-4">Aditividade</p>
+              <div className="glass-card p-8 rounded-[2.5rem] border-white/50 premium-shadow hover-elevate group">
+                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4 group-hover:text-brand-600 transition-colors">Aditividade</p>
                  <div className="flex items-center justify-between">
-                    <h4 className="text-2xl font-black text-slate-900">85%</h4>
-                    <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+                    <h4 className="text-2xl font-black text-slate-900 text-gradient">85%</h4>
+                    <div className="w-10 h-10 bg-brand-50 text-brand-600 rounded-xl flex items-center justify-center font-black">
                        <TrendingUp className="w-5 h-5" />
                     </div>
                  </div>
               </div>
-              <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                 <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-4">Última Sessão</p>
+              <div className="glass-card p-8 rounded-[2.5rem] border-white/50 premium-shadow hover-elevate group">
+                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4 group-hover:text-brand-600 transition-colors">Última Sessão</p>
                  <div className="flex items-center justify-between">
-                    <h4 className="text-xl font-black text-slate-900">{records.length > 0 ? format(parseISO(records[0].created_at), "dd/MM/yy") : '---'}</h4>
-                    <div className="w-10 h-10 bg-brand-50 text-brand-600 rounded-xl flex items-center justify-center">
+                    <h4 className="text-xl font-black text-slate-900 text-gradient">{records.length > 0 ? format(parseISO(records[0].created_at), "dd/MM/yy") : '---'}</h4>
+                    <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
                        <Clock className="w-5 h-5" />
                     </div>
                  </div>
               </div>
-              <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                 <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-4">Ticket Médio</p>
+              <div className="glass-card p-8 rounded-[2.5rem] border-white/50 premium-shadow hover-elevate group">
+                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4 group-hover:text-brand-600 transition-colors">Ticket Médio</p>
                  <div className="flex items-center justify-between">
-                    <h4 className="text-2xl font-black text-slate-900">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(patient.base_session_value || 160)}</h4>
-                    <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+                    <h4 className="text-2xl font-black text-slate-900 text-gradient">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(patient.base_session_value || 160)}</h4>
+                    <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
                        <DollarSign className="w-5 h-5" />
                     </div>
                  </div>
