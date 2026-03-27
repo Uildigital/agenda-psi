@@ -3,14 +3,12 @@ import { supabase } from '../services/supabaseClient';
 import type { Appointment, Patient, DoctorProfile } from '../types';
 import { 
   Download, 
-  CheckCircle2, 
   Clock, 
   Wallet,
   ArrowUpRight,
   Plus,
   Eye,
   EyeOff,
-  TrendingDown,
   DollarSign,
   Smartphone,
   Banknote,

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { Appointment } from '../types';
-import { confirmarAgendamentoWebhook } from '../api/webhook';
+// Removido import não utilizado para build limpo
 import { supabase } from '../services/supabaseClient';
 import { addMinutes, isSameMinute, parseISO } from 'date-fns';
 
@@ -15,7 +15,7 @@ export function useBooking(doctorId: string | null) {
       if (!doctorId) return;
       
       try {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from('appointments')
           .select('appointment_date')
           .eq('doctor_id', doctorId)

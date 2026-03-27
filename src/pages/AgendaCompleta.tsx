@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
 import type { Appointment, Patient } from '../types';
 import { 
@@ -17,7 +17,8 @@ import {
   Wallet,
   CreditCard,
   Banknote,
-  Smartphone
+  Smartphone,
+  Clock
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';

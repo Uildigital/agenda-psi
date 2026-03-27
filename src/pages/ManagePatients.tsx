@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../services/supabaseClient';
-import type { Patient, Appointment } from '../types';
+import type { Patient } from '../types';
 import { 
   Users, 
   Search, 

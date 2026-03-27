@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { type DoctorProfile } from '../types';
-import { Save, ExternalLink, RefreshCw, Palette, Phone, User, DollarSign, Smartphone } from 'lucide-react';
+import { Save, ExternalLink, RefreshCw, Palette, User, DollarSign, Smartphone } from 'lucide-react';
 
 export default function AdminProfile() {
   const [profile, setProfile] = useState<DoctorProfile | null>(null);
