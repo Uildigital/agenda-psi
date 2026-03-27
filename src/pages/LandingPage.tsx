@@ -342,7 +342,7 @@ export default function LandingPage() {
                                   />
                                   <div className="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                                      {slots.map((slot, i) => {
-                                       const isSelected = selectedSlot === slot.date;
+                                       const isSelected = selectedSlot?.getTime() === slot.date.getTime();
                                        return (
                                          <button
                                            key={i} disabled={!slot.isAvailable} onClick={() => setSelectedSlot(slot.date)}

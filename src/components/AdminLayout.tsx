@@ -8,8 +8,7 @@ import {
   LogOut, 
   UserCircle,
   Wallet,
-  Menu,
-  Plus
+  Menu
 } from 'lucide-react';
 import { supabase } from '../services/supabaseClient';
 
@@ -92,9 +91,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <span className="font-black text-lg tracking-tighter text-slate-950">PSi</span>
          </div>
          <div className="flex items-center gap-2">
-            <Link to="/admin/agenda?new=true" className="w-10 h-10 bg-brand-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/20 active:scale-90 transition-transform">
-               <Plus className="w-5 h-5" />
-            </Link>
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="w-10 h-10 bg-slate-50 text-slate-900 rounded-xl flex items-center justify-center active:bg-slate-200"

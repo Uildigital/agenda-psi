@@ -9,6 +9,7 @@ export interface Patient {
   notes?: string;
   created_at?: string;
   base_session_value?: number;
+  status?: 'active' | 'inactive';
 }
 
 export interface MedicalRecord {

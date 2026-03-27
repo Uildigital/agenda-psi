@@ -96,7 +96,25 @@ export function useBooking(doctorId: string | null) {
             throw new Error('Horário Indisponível (Double Booking)');
         }
 
-        // Salvar localmente
+        // 1. Criar/Atualizar Paciente Automaticamente
+        const { data: ptData, error: ptError } = await supabase
+          .from('patients')
+          .upsert({
+             doctor_id: doctorId,
+             full_name: novoAgendamento.patient_name,
+             whatsapp: novoAgendamento.whatsapp
+          }, { onConflict: 'doctor_id,whatsapp' })
+          .select()
+          .single();
+
+        if (ptError) console.error('Erro ao sincronizar paciente:', ptError);
+        
+        // 2. Vincular ID do paciente ao agendamento
+        if (ptData) {
+          novoAgendamento.patient_id = ptData.id;
+        }
+
+        // 3. Salvar Agendamento
         setAppointments(prev => [...prev, novoAgendamento as Appointment]);
 
         const { error: supaError } = await supabase
@@ -106,9 +124,6 @@ export function useBooking(doctorId: string | null) {
         if (supaError) {
           throw new Error('Conflito no Servidor.');
         }
-        
-        // Aqui no futuro pode ser adaptado pro n8n usar a nova interface
-        // await confirmarAgendamentoWebhook(novoAgendamento);
         
         return novoAgendamento;
         

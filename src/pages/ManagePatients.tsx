@@ -5,12 +5,11 @@ import {
   Users, 
   Search, 
   Plus, 
-  UserPlus, 
-  ArrowRight, 
+  UserPlus,
+  CheckCircle2, 
   Download,
   AlertCircle,
-  CheckCircle2,
-  RefreshCw,
+  LogOut,
   FileText
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -20,7 +19,6 @@ export default function ManagePatients() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     fetchPatients();
@@ -41,53 +39,21 @@ export default function ManagePatients() {
     setLoading(false);
   };
 
-  const handleSyncLegacy = async () => {
-    setSyncing(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    // 1. Pegar todos os agendamentos para extrair pacientes únicos
-    const { data: appts } = await supabase
-      .from('appointments')
-      .select('id, patient_name, whatsapp')
-      .eq('doctor_id', user.id);
-    
-    if (appts) {
-      // Usar Map para garantir unicidade por WhatsApp
-      const patientMap = new Map();
-      appts.forEach(a => {
-        if (!a.whatsapp) return;
-        if (!patientMap.has(a.whatsapp)) {
-          patientMap.set(a.whatsapp, a.patient_name);
-        }
-      });
-
-      for (const [whatsapp, name] of patientMap) {
-        // Inserir ou Pegar Paciente
-        const { data: ptData } = await supabase
-          .from('patients')
-          .upsert({
-            doctor_id: user.id,
-            full_name: name,
-            whatsapp: whatsapp
-          }, { onConflict: 'doctor_id,whatsapp' })
-          .select()
-          .single();
-
-        if (ptData) {
-          // VINCULAR: Atualizar appointments para apontar p/ o novo ID de paciente
-          await supabase
-            .from('appointments')
-            .update({ patient_id: ptData.id })
-            .eq('doctor_id', user.id)
-            .eq('whatsapp', whatsapp);
-        }
-      }
+  const handleToggleStatus = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    const { error } = await supabase.from('patients').update({ status: newStatus }).eq('id', id);
+    if (!error) {
+      setPatients(prev => prev.map(p => p.id === id ? { ...p, status: newStatus } : p));
     }
-    
-    await fetchPatients();
-    setSyncing(false);
-    alert('Sincronização Concluída! Todos os agendamentos foram vinculados aos prontuários.');
+  };
+
+  const handleDeletePatient = async (id: string) => {
+    if (!window.confirm('Tem certeza que deseja excluir este paciente? Esta ação é irreversível e apagará o histórico clínico.')) return;
+    const { error } = await supabase.from('patients').delete().eq('id', id);
+    if (!error) {
+      setPatients(prev => prev.filter(p => p.id !== id));
+      alert('Paciente excluído com sucesso.');
+    }
   };
 
   const handleExportCSV = () => {
@@ -126,12 +92,6 @@ export default function ManagePatients() {
           <p className="text-slate-500 mt-2 font-medium">Gestão centralizada de registros e prontuários clínicos.</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-           <button 
-             onClick={handleSyncLegacy} disabled={syncing}
-             className="px-6 py-3 bg-white text-brand-600 border border-brand-100 rounded-xl font-bold text-sm hover:bg-brand-50 transition flex items-center gap-2 shadow-sm"
-           >
-             <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} /> {syncing ? 'Sincronizando...' : 'Sincronizar Dados'}
-           </button>
            <button 
              onClick={handleExportCSV}
              className="px-6 py-3 bg-white text-slate-700 border border-slate-200 rounded-xl font-bold text-sm hover:bg-slate-50 transition flex items-center gap-2 shadow-sm"
@@ -175,8 +135,10 @@ export default function ManagePatients() {
                   <div className="w-16 h-16 bg-slate-100 rounded-3xl flex items-center justify-center text-slate-400 group-hover:bg-brand-50 group-hover:text-brand-600 transition-colors">
                      <Users className="w-8 h-8" />
                   </div>
-                  <div className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 rounded-full text-[10px] font-black uppercase tracking-widest">
-                     <CheckCircle2 className="w-3 h-3" /> Ativo
+                  <div className="flex flex-col items-end gap-2">
+                     <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${p.status === 'inactive' ? 'bg-slate-100 text-slate-400' : 'bg-green-50 text-green-600'}`}>
+                        {p.status === 'inactive' ? 'Inativo' : 'Ativo'}
+                     </span>
                   </div>
                </div>
                
@@ -185,15 +147,26 @@ export default function ManagePatients() {
                   <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">{p.whatsapp || 'Sem celular'}</p>
                </div>
 
-               <div className="mt-8 pt-8 border-t border-slate-50 flex items-center gap-2">
+               <div className="mt-8 pt-8 border-t border-slate-50 flex items-center gap-3">
                   <Link 
                     to={`/admin/pacientes/${p.id}`}
-                    className="flex-1 flex items-center justify-center gap-3 py-4 bg-slate-900 text-white font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-brand-600 transition-all shadow-lg"
+                    className="flex-[2] flex items-center justify-center gap-3 py-4 bg-slate-950 text-white font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-brand-600 transition-all shadow-lg"
                   >
-                     <FileText className="w-4 h-4" /> Ver Prontuário
+                     <FileText className="w-4 h-4" /> Ver
                   </Link>
-                  <button className="p-4 bg-slate-50 text-slate-400 rounded-2xl hover:text-brand-600 hover:bg-brand-50 transition shadow-sm">
-                     <ArrowRight className="w-5 h-5" />
+                  <button 
+                    onClick={() => handleToggleStatus(p.id, p.status || 'active')}
+                    title={p.status === 'inactive' ? 'Ativar Paciente' : 'Desativar Paciente'}
+                    className={`p-4 rounded-2xl transition-all shadow-sm border ${p.status === 'inactive' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100 hover:text-amber-600 hover:bg-amber-50'}`}
+                  >
+                     <CheckCircle2 className="w-5 h-5" />
+                  </button>
+                  <button 
+                    onClick={() => handleDeletePatient(p.id)}
+                    title="Excluir Paciente"
+                    className="p-4 bg-red-50 text-red-400 rounded-2xl hover:text-red-700 hover:bg-red-100 border border-red-100 transition shadow-sm"
+                  >
+                     <LogOut className="w-5 h-5" /> 
                   </button>
                </div>
                
