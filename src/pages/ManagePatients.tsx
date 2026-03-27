@@ -9,8 +9,6 @@ import {
   CheckCircle2, 
   Download,
   FileText,
-  MoreVertical,
-  History,
   Trash2,
   X,
   Smartphone,
@@ -19,13 +17,11 @@ import {
   Calendar,
   AlertCircle
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { Link } from 'react-router-dom';
+import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ManagePatients() {
-  const navigate = useNavigate();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');

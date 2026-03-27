@@ -1,24 +1,23 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
-import type { Patient, MedicalRecord, Appointment } from '../types';
+import type { Patient, MedicalRecord } from '../types';
 import { 
   ArrowLeft, 
   Save, 
   Plus, 
   FileText, 
-  History,
   User,
   Activity,
   Eye,
   EyeOff,
   DollarSign,
   Smartphone,
-  CheckCircle2,
   Clock,
   ChevronRight,
   X,
-  Stethoscope
+  Stethoscope,
+  AlertCircle
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -29,7 +28,6 @@ export default function PatientDetails() {
   const navigate = useNavigate();
   const [patient, setPatient] = useState<Patient | null>(null);
   const [records, setRecords] = useState<MedicalRecord[]>([]);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showNewRecord, setShowNewRecord] = useState(false);
@@ -88,9 +86,6 @@ export default function PatientDetails() {
     if (pt) {
       setPatient(pt as Patient);
       setEditPatient(pt);
-      
-      const { data: appts } = await supabase.from('appointments').select('*').eq('whatsapp', pt.whatsapp).order('appointment_date', { ascending: false });
-      if (appts) setAppointments(appts as Appointment[]);
     }
 
     const { data: recs } = await supabase.from('medical_records').select('*').eq('patient_id', id).order('created_at', { ascending: false });
@@ -334,7 +329,7 @@ ${newSoap.plano || 'Seguimento terapêutico padrão.'}
               )}
               
               <AnimatePresence>
-              {records.map((rec, index) => (
+              {records.map((rec) => (
                     <motion.div 
                       key={rec.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
                       className="relative pl-0 md:pl-24"
