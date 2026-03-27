@@ -96,7 +96,7 @@ export default function LandingPage() {
   const testimonials = [
     { name: "Mariana S.", text: "O acolhimento foi fundamental para eu lidar com a ansiedade. Sinto-me ouvida e respeitada a cada sessão.", stars: 5 },
     { name: "Ricardo F.", text: "Processo terapêutico incrível. O profissionalismo e a empatia do profissional são ímpares.", stars: 5 },
-    { name: "Juliana T.", text: "A consulta experimental me deu a segurança que eu precisava para começar minha jornada.", stars: 5 }
+    { name: "Juliana T.", text: "A primeira sessão de alinhamento me deu a segurança que eu precisava para começar minha jornada.", stars: 5 }
   ];
 
   return (
@@ -119,7 +119,13 @@ export default function LandingPage() {
         <nav className="hidden md:flex items-center gap-8 text-sm font-bold text-slate-500 tracking-tight">
            <a href="#sobre" className="hover:text-brand-color transition-colors">Sobre</a>
            <a href="#especialidades" className="hover:text-brand-color transition-colors">Atuação</a>
-           <a href="#agendar" className="px-6 py-3 rounded-xl text-white shadow-xl shadow-brand-500/10 hover:shadow-brand-500/30 transition-all hover:-translate-y-1" style={{ backgroundColor: brandColor }}>Sua Experimental</a>
+           <a 
+             href={`https://wa.me/${profile.whatsapp_number?.replace(/\D/g,'') || ''}?text=Ol%C3%A1%2C%20queria%20saber%20mais%20sobre%20o%20atendimento%20da%20cl%C3%ADnica.`}
+             target="_blank" rel="noreferrer"
+             className="px-6 py-3 rounded-xl text-white shadow-xl shadow-brand-500/10 hover:shadow-brand-500/30 transition-all hover:-translate-y-1" style={{ backgroundColor: brandColor }}
+           >
+             Falar com Atendimento
+           </a>
         </nav>
       </header>
 
@@ -138,9 +144,14 @@ export default function LandingPage() {
                 Descubra como a psicoterapia pode transformar sua relação consigo mesmo e com o mundo através de um acolhimento ético e especializado.
               </p>
               <div className="flex flex-col sm:flex-row gap-5 items-center">
-                 <a href="#agendar" className="w-full sm:w-auto px-10 py-5 text-white rounded-2xl font-black text-lg shadow-2xl transition-all hover:scale-105 active:scale-95 text-center" style={{ backgroundColor: brandColor, shadowColor: `${brandColor}40` } as any}>
-                    Agendar Minha Experimental
-                 </a>
+                  <a 
+                    href={`https://wa.me/${profile.whatsapp_number?.replace(/\D/g,'') || ''}?text=Ol%C3%A1%2C%20vim%20pelo%20site%20e%20gostaria%20de%20agendar%20um%20alinhamento%20estrat%C3%A9gico.`}
+                    target="_blank" rel="noreferrer"
+                    className="w-full sm:w-auto px-10 py-5 text-white rounded-2xl font-black text-lg shadow-2xl transition-all hover:scale-105 active:scale-95 text-center flex items-center justify-center gap-3" 
+                    style={{ backgroundColor: brandColor, shadowColor: `${brandColor}40` } as any}
+                  >
+                    <MessageCircle className="w-6 h-6" /> Falar com Atendimento
+                  </a>
                  <p className="text-sm font-bold text-slate-400 flex items-center gap-2">
                     <Shield className="w-5 h-5 text-green-500" /> Sigilo Profissional Ético
                  </p>
@@ -249,13 +260,13 @@ export default function LandingPage() {
            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center relative z-10">
               <div className="text-white space-y-8">
                  <div className="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-md rounded-full text-xs font-black tracking-[0.2em] uppercase text-brand-color" style={{ color: brandColor }}>
-                    Oportunidade Única
+                    Elite Digital
                  </div>
                  <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9]">
-                    Inicie sua Jornada <br/> <span className="text-slate-400">Experimental</span>.
+                    Agendamento <br/> <span className="text-slate-400">Direto Opcional</span>.
                  </h2>
                  <p className="text-xl text-slate-400 font-medium leading-relaxed max-w-md">
-                    Sua primeira sessão experimental serve para nos conhecermos e alinharmos as expectativas do tratamento terapêutico.
+                    Sua primeira Sessão de Alinhamento serve para compreendermos suas demandas e estruturarmos o melhor plano terapêutico para seu caso.
                  </p>
                  <div className="space-y-6">
                     <div className="flex items-center gap-6 group">
@@ -275,8 +286,8 @@ export default function LandingPage() {
                     <div className="flex items-center gap-6 group">
                        <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-brand-color/20 transition-all font-bold text-lg" style={{ color: brandColor }}>3</div>
                        <div>
-                          <p className="font-bold text-white">Sessão Experimental Realizada</p>
-                          <p className="text-sm text-slate-500">O primeiro passo para sua transformação.</p>
+                          <p className="font-bold text-white">Sessão de Alinhamento</p>
+                          <p className="text-sm text-slate-500">O primeiro passo estruturado para sua evolução.</p>
                        </div>
                     </div>
                  </div>
@@ -298,7 +309,7 @@ export default function LandingPage() {
                         {form.nome}, sua vaga está reservada para <br/><strong>{selectedSlot && format(selectedSlot, "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}</strong>.
                       </p>
                       <a
-                        href={`https://wa.me/${profile.whatsapp_number?.replace(/\D/g,'') || ''}?text=Ol%C3%A1%20${encodeURIComponent(profile.full_name)}.%20Sou%20${encodeURIComponent(form.nome)}%20e%20acabei%20de%20agendar%20minha%20sess%C3%A3o%20experimental.`}
+                        href={`https://wa.me/${profile.whatsapp_number?.replace(/\D/g,'') || ''}?text=Ol%C3%A1%20${encodeURIComponent(profile.full_name)}.%20Sou%20${encodeURIComponent(form.nome)}%20e%20acabei%20de%20reservar%20meu%20hor%C3%A1rio%20para%20alinhamento.`}
                         target="_blank" rel="noreferrer"
                         className="flex items-center justify-center gap-3 w-full px-8 py-5 bg-green-500 text-white font-black rounded-2xl hover:bg-green-600 transition-all shadow-xl shadow-green-500/20"
                       >
@@ -400,7 +411,7 @@ export default function LandingPage() {
            </div>
            <div className="space-y-4">
               {[
-                { q: "Como funciona a primeira sessão experimental?", a: "É um momento de acolhimento gratuito ou com valor social onde explico minha metodologia e você compartilha suas dores." },
+                { q: "Como funciona a primeira Sessão de Alinhamento?", a: "É um atendimento inicial focado em entender sua queixa principal, tirar dúvidas sobre a metodologia e alinhar as próximas etapas do seu processo terapêutico." },
                 { q: "Qual a duração da sessão?", a: "As sessões regulares duram em média 50 minutos." },
                 { q: "Vocês atendem planos de saúde?", a: "Trabalhamos apenas com atendimento particular, porém fornecemos recibo para reembolso." },
                 { q: "A terapia online é eficaz?", a: "Sim, diversos estudos comprovam que a eficácia da terapia online é idêntica à presencial para a maioria dos casos." }
@@ -424,6 +435,21 @@ export default function LandingPage() {
          </div>
          <p className="text-xs text-slate-400 font-medium uppercase tracking-[0.2em]">© 2026 {profile.full_name} • Todos os direitos reservados</p>
       </footer>
+
+      {/* FLOATING WHATSAPP CONCIERGE BUTTON */}
+      <a 
+        href={`https://wa.me/${profile.whatsapp_number?.replace(/\D/g,'') || ''}?text=Ol%C3%A1%2C%20queria%20saber%20mais%20sobre%20o%20atendimento%20da%20cl%C3%ADnica.`}
+        target="_blank" rel="noreferrer"
+        className="fixed bottom-8 right-8 z-[100] w-20 h-20 bg-green-500 text-white rounded-full shadow-2xl shadow-green-500/40 hover:scale-110 active:scale-90 transition-all flex items-center justify-center animate-bounce group"
+      >
+        <MessageCircle className="w-10 h-10 group-hover:animate-pulse" />
+        <div className="absolute right-24 bg-white px-4 py-3 rounded-2xl shadow-xl border border-slate-100 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+           <p className="text-slate-900 font-black text-xs uppercase tracking-widest flex items-center gap-2">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
+              Atendimento Online agora
+           </p>
+        </div>
+      </a>
 
     </div>
   );
