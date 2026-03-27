@@ -17,11 +17,13 @@ import {
   ChevronRight,
   X,
   Stethoscope,
-  AlertCircle
+  AlertCircle,
+  ClipboardList
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
+import AnamnesisModule from '../components/AnamnesisModule';
 
 export default function PatientDetails() {
   const { id } = useParams<{ id: string }>();
@@ -31,6 +33,7 @@ export default function PatientDetails() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showNewRecord, setShowNewRecord] = useState(false);
+  const [showAnamnesis, setShowAnamnesis] = useState(false);
   
   // Privacy Mode defaults to HIDDEN (true)
   const [privacyMode, setPrivacyMode] = useState(true);
@@ -196,6 +199,13 @@ ${newSoap.plano || 'Seguimento terapêutico padrão.'}
                {privacyMode ? 'Revelar Dados' : 'Modo Privado'}
              </button>
              
+             <button 
+               onClick={() => setShowAnamnesis(true)}
+               className="h-14 px-6 bg-white text-slate-900 border border-slate-200 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition shadow-sm flex items-center justify-center gap-3 active:scale-95"
+             >
+               <ClipboardList className="w-4 h-4 text-brand-600" /> Anamnese Profissional
+             </button>
+
              <button 
                onClick={() => setShowNewRecord(true)}
                className="h-14 px-8 bg-brand-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-brand-700 transition shadow-xl shadow-brand-500/30 flex items-center justify-center gap-3 active:scale-95"
@@ -473,6 +483,12 @@ ${newSoap.plano || 'Seguimento terapêutico padrão.'}
                </button>
             </div>
           </motion.div>
+        )}
+        {showAnamnesis && (
+          <AnamnesisModule 
+            patient={patient} 
+            onClose={() => setShowAnamnesis(false)} 
+          />
         )}
       </AnimatePresence>
     </div>

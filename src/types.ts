@@ -22,6 +22,30 @@ export interface MedicalRecord {
   obs?: string;
 }
 
+export interface Anamnesis {
+  id: string;
+  patient_id: string;
+  doctor_id: string;
+  content: AnamnesisContent;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AnamnesisContent {
+  main_complaint: string;
+  patient_history: string;
+  family_history: string;
+  expectations: string;
+  previous_treatments: string;
+  current_medications: string;
+  lifestyle: {
+    sleep: string;
+    diet: string;
+    exercise: string;
+  };
+  clinical_goals: string;
+}
+
 export interface Appointment {
   id: string;
   doctor_id: string;
