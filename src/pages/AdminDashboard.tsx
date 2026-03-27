@@ -4,7 +4,6 @@ import type { Appointment, Patient, DoctorProfile } from '../types';
 import { 
   TrendingUp, 
   Clock, 
-  ArrowRight,
   CheckCircle,
   PlusCircle,
   DollarSign,
@@ -13,7 +12,6 @@ import {
   Users,
   Eye,
   EyeOff,
-  User,
   FileText
 } from 'lucide-react';
 import { format, isToday, parseISO, isSameMonth } from 'date-fns';

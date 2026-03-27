@@ -1,38 +1,28 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
-import type { Appointment, Patient, DoctorProfile } from '../types';
+import type { Appointment, Patient } from '../types';
 import { 
   Calendar, 
   Search, 
   Plus, 
-  Trash2, 
   CheckCircle2, 
-  XCircle, 
-  AlertCircle,
-  Phone,
-  User,
-  History,
-  DollarSign,
   Wallet,
   CreditCard,
   Banknote,
   Smartphone,
-  Clock,
   ChevronRight,
   ChevronLeft,
   FileText
 } from 'lucide-react';
-import { format, parseISO, addDays, subDays, startOfDay, isSameDay } from 'date-fns';
+import { format, parseISO, addDays, subDays, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AgendaCompleta() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [profile, setProfile] = useState<DoctorProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [searchTerm, setSearchTerm] = useState('');
@@ -55,11 +45,9 @@ export default function AgendaCompleta() {
 
     const { data: appts } = await supabase.from('appointments').select('*').eq('doctor_id', user.id);
     const { data: pts } = await supabase.from('patients').select('*').eq('doctor_id', user.id);
-    const { data: prof } = await supabase.from('profiles').select('*').eq('id', user.id).single();
     
     if (appts) setAppointments(appts as Appointment[]);
     if (pts) setPatients(pts as Patient[]);
-    if (prof) setProfile(prof as DoctorProfile);
     setLoading(false);
   };
 
