@@ -189,31 +189,58 @@ export default function AdminDashboard() {
                  <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-6 opacity-20" />
                  <p className="text-slate-400 font-black uppercase text-xs tracking-widest">Nenhuma sessão agendada para hoje.</p>
               </div>
-            ) : (
-              hoje.sort((a,b) => a.appointment_date.localeCompare(b.appointment_date)).map(a => (
-                <div key={a.id} className="bg-white p-6 md:p-8 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 hover:border-brand-300 transition-all group active:scale-[0.98]">
-                  <div className="flex items-center gap-6 w-full sm:w-auto">
-                    <div className="w-16 h-16 bg-slate-50 text-brand-600 rounded-[1.5rem] flex flex-col items-center justify-center font-black group-hover:bg-brand-600 group-hover:text-white transition-colors">
-                       <span className="text-[8px] uppercase tracking-widest mb-0.5">Hora</span>
+            ) : (hoje.sort((a,b) => a.appointment_date.localeCompare(b.appointment_date)).map(a => (
+                <div key={a.id} className="bg-white p-6 md:p-8 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 hover:border-brand-300 transition-all group active:scale-[0.99]">
+                  <div className="flex items-center gap-6 w-full lg:w-auto">
+                    <div className={`w-16 h-16 rounded-[1.5rem] flex flex-col items-center justify-center font-black transition-colors ${a.status === 'confirmed' ? 'bg-indigo-600 text-white' : a.status === 'finished' ? 'bg-emerald-600 text-white' : 'bg-slate-50 text-brand-600'}`}>
+                       <span className="text-[8px] uppercase tracking-widest mb-0.5 opacity-60">Hora</span>
                        <span className="text-lg leading-none">{format(parseISO(a.appointment_date), "HH:mm")}</span>
                     </div>
                     <div>
                        <h4 onClick={() => handlePatientClick(a)} className="font-black text-slate-950 text-xl tracking-tighter uppercase leading-none mb-2 hover:underline cursor-pointer">{a.patient_name}</h4>
                        <div className="flex items-center gap-3">
-                          <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border ${a.status === 'confirmed' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : a.status === 'finished' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
-                              {a.status === 'confirmed' ? 'Confirmado' : a.status === 'finished' ? 'Finalizado' : 'Aguardando'}
+                          <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border ${a.status === 'confirmed' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : a.status === 'finished' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : (a.status === 'cancelled' || a.status === 'no_show') ? 'bg-red-50 text-red-600 border-red-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                              {a.status === 'confirmed' ? 'Confirmado' : a.status === 'finished' ? 'Finalizado' : a.status === 'cancelled' ? 'Cancelado' : a.status === 'no_show' ? 'Falta' : 'Pendente'}
                           </span>
-                          {a.status === 'finished' && (
-                             <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${a.payment_status === 'paid' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
-                                {a.payment_status === 'paid' ? 'PAGO' : 'PENDENTE'}
-                             </span>
-                          )}
                        </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 w-full sm:w-auto mt-2 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-t-0 border-slate-50">
-                     <button onClick={() => handlePatientClick(a)} className="flex-1 sm:flex-none inline-flex items-center justify-center gap-3 bg-slate-950 text-white font-black py-4 px-8 rounded-2xl text-[10px] uppercase tracking-widest active:bg-brand-600 transition-all shadow-lg active:scale-95">
-                        <FileText className="w-4 h-4" /> ABRIR PRONTUÁRIO
+                  
+                  <div className="flex items-center gap-2 w-full lg:w-auto pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-50">
+                     {a.status === 'pending' && (
+                        <button 
+                          onClick={async () => {
+                             await supabase.from('appointments').update({ status: 'confirmed' }).eq('id', a.id);
+                             fetchData();
+                          }}
+                          className="p-4 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm" title="Confirmar Presença"
+                        >
+                           <CheckCircle className="w-5 h-5" />
+                        </button>
+                     )}
+                     
+                     {a.status !== 'finished' && a.status !== 'cancelled' && (
+                        <Link to="/admin/agenda" className="flex-1 lg:flex-none h-14 px-6 bg-brand-600 text-white font-black text-[10px] rounded-xl flex items-center justify-center uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-brand-500/10">
+                           FINALIZAR
+                        </Link>
+                     )}
+
+                     <button 
+                       onClick={async () => {
+                          if (window.confirm('Marcar como falta ou cancelar?')) {
+                             const opt = window.prompt('C para Cancelar, F para Falta');
+                             const status = opt === 'C' ? 'cancelled' : 'no_show';
+                             await supabase.from('appointments').update({ status }).eq('id', a.id);
+                             fetchData();
+                          }
+                       }}
+                       className="p-4 bg-slate-50 text-slate-400 rounded-xl hover:bg-red-50 hover:text-red-500 transition-all shadow-sm"
+                     >
+                        <Calendar className="w-5 h-5" />
+                     </button>
+
+                     <button onClick={() => handlePatientClick(a)} className="flex-1 lg:flex-none h-14 px-6 bg-slate-950 text-white font-black py-4 rounded-xl text-[10px] uppercase tracking-widest active:bg-brand-600 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2">
+                        <FileText className="w-4 h-4" /> PRONTUÁRIO
                      </button>
                   </div>
                 </div>
