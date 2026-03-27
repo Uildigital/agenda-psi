@@ -45,11 +45,26 @@ export default function AdminDashboard() {
 
     const { data: appts } = await supabase.from('appointments').select('*').eq('doctor_id', user.id);
     const { data: pts } = await supabase.from('patients').select('*').eq('doctor_id', user.id);
-    const { data: prof } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+    const { data: prof, error: profError } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
+    
+    let activeProfile = prof;
+    if (!prof && !profError) {
+       // Cria perfil inicial caso tenha sido deletado
+       const newProfile = {
+          id: user.id,
+          full_name: 'Novo Psicólogo',
+          slug: `psi-${user.id.substring(0, 5)}`,
+          default_session_value: 160
+       };
+       await supabase.from('profiles').insert([newProfile]);
+       activeProfile = newProfile as DoctorProfile;
+    } else if (prof) {
+       setProfile(prof as DoctorProfile);
+    }
     
     if (appts) setAppointments(appts as Appointment[]);
     if (pts) setPatients(pts as Patient[]);
-    if (prof) setProfile(prof as DoctorProfile);
+    if (activeProfile) setProfile(activeProfile as DoctorProfile);
     setLoading(false);
   };
 

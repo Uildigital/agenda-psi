@@ -57,11 +57,23 @@ export default function AdminFaturamento() {
 
     const { data: appts } = await supabase.from('appointments').select('*').eq('doctor_id', user.id);
     const { data: pts } = await supabase.from('patients').select('*').eq('doctor_id', user.id);
-    const { data: prof } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+    const { data: prof, error: profError } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
     
     if (appts) setAppointments(appts as Appointment[]);
     if (pts) setPatients(pts as Patient[]);
-    if (prof) setProfile(prof as DoctorProfile);
+    if (prof) {
+       setProfile(prof as DoctorProfile);
+    } else if (!profError) {
+       // Auto-create profile if missing
+       const newProfile = {
+          id: user.id,
+          full_name: 'Novo Psicólogo',
+          slug: `psi-${user.id.substring(0, 5)}`,
+          default_session_value: 160
+       };
+       await supabase.from('profiles').insert([newProfile]);
+       setProfile(newProfile as DoctorProfile);
+    }
     setLoading(false);
   };
 

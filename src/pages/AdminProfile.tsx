@@ -18,13 +18,25 @@ export default function AdminProfile() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data } = await supabase
+    const { data: prof, error: profError } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
     
-    if (data) setProfile(data as DoctorProfile);
+    if (!prof && !profError) {
+       // Se o perfil não existe mais (pós-limpeza), criamos um inicial
+       const newProfile = {
+          id: user.id,
+          full_name: 'Novo Psicólogo',
+          slug: `psi-${user.id.substring(0, 5)}`,
+          default_session_value: 160
+       };
+       await supabase.from('profiles').insert([newProfile]);
+       setProfile(newProfile as DoctorProfile);
+    } else if (prof) {
+       setProfile(prof as DoctorProfile);
+    }
     setLoading(false);
   };
 
