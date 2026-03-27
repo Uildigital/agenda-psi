@@ -1,0 +1,245 @@
+import { useEffect, useState } from 'react';
+import { supabase } from '../services/supabaseClient';
+import type { Appointment, Patient, DoctorProfile } from '../types';
+import { 
+  TrendingUp, 
+  Clock, 
+  ArrowRight,
+  CheckCircle,
+  PlusCircle,
+  DollarSign,
+  Wallet,
+  Calendar,
+  Users,
+  Eye,
+  EyeOff
+} from 'lucide-react';
+import { format, isToday, parseISO, isSameMonth } from 'date-fns';
+import { Link, useNavigate } from 'react-router-dom';
+
+export default function AdminDashboard() {
+  const navigate = useNavigate();
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [profile, setProfile] = useState<DoctorProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  // Privacy defaults to true (HIDDEN)
+  const [privacyMode, setPrivacyMode] = useState(true);
+
+  useEffect(() => {
+    fetchData();
+    const savedPrivacy = localStorage.getItem('psi_privacy_mode');
+    if (savedPrivacy !== null) {
+      setPrivacyMode(savedPrivacy === 'true');
+    } else {
+      setPrivacyMode(true);
+    }
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: appts } = await supabase.from('appointments').select('*').eq('doctor_id', user.id);
+    const { data: pts } = await supabase.from('patients').select('*').eq('doctor_id', user.id);
+    const { data: prof } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+    
+    if (appts) setAppointments(appts as Appointment[]);
+    if (pts) setPatients(pts as Patient[]);
+    if (prof) setProfile(prof as DoctorProfile);
+    setLoading(false);
+  };
+
+  const togglePrivacy = () => {
+    if (privacyMode) {
+      if (window.confirm('Deseja tornar os valores visíveis agora?')) {
+        setPrivacyMode(false);
+        localStorage.setItem('psi_privacy_mode', 'false');
+      }
+    } else {
+      setPrivacyMode(true);
+      localStorage.setItem('psi_privacy_mode', 'true');
+    }
+  };
+
+  const handlePatientClick = (appt: Appointment) => {
+     if (appt.patient_id) {
+        navigate(`/admin/pacientes/${appt.patient_id}`);
+     } else {
+        const pt = patients.find(p => p.whatsapp === appt.whatsapp || p.full_name === appt.patient_name);
+        if (pt) navigate(`/admin/pacientes/${pt.id}`);
+        else alert('Paciente não vinculado. Sincronize seus dados na aba Pacientes!');
+     }
+  };
+
+  const hoje = appointments.filter(a => isToday(parseISO(a.appointment_date)));
+  
+  const totalFinished = appointments.filter(a => a.status === 'finished').length;
+  const totalNoShow = appointments.filter(a => a.status === 'no_show').length;
+  const totalRelevant = totalFinished + totalNoShow;
+  const attendanceRate = totalRelevant > 0 ? Math.round((totalFinished / totalRelevant) * 100) : 0;
+  
+  const newsThisMonth = patients.filter(p => p.created_at && isSameMonth(parseISO(p.created_at), new Date())).length;
+
+  const getPrice = (appt: Appointment) => {
+    if (appt.price) return appt.price;
+    const pt = patients.find(p => p.id === appt.patient_id || p.whatsapp === appt.whatsapp);
+    return pt?.base_session_value || profile?.default_session_value || 160;
+  };
+
+  const currentMonthRevenue = appointments
+    .filter(a => a.status === 'finished' && a.payment_status === 'paid' && isSameMonth(parseISO(a.appointment_date), new Date()))
+    .reduce((acc, a) => acc + getPrice(a), 0);
+  
+  const expectedMonthlyRevenue = appointments
+    .filter(a => isSameMonth(parseISO(a.appointment_date), new Date()))
+    .reduce((acc, a) => acc + getPrice(a), 0);
+
+  const revenueProgress = expectedMonthlyRevenue > 0 ? Math.round((currentMonthRevenue / expectedMonthlyRevenue) * 100) : 0;
+
+  const formatCurrency = (val: number) => {
+    if (privacyMode) return 'R$ ••••••';
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+  };
+
+  return (
+    <div className="space-y-8 md:space-y-12 animate-in fade-in duration-700 pb-20 px-2 sm:px-0">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tighter uppercase leading-none">Visão Geral</h1>
+          <p className="text-slate-500 font-bold tracking-tight text-sm md:text-base mt-2">Bem-vindo ao seu centro de controle clínico.</p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+           <button 
+             onClick={togglePrivacy}
+             className={`px-6 py-4 border-2 rounded-2xl font-black text-[10px] uppercase tracking-widest transition shadow-sm flex items-center gap-3 ${privacyMode ? 'bg-white border-slate-100 text-slate-400' : 'bg-brand-50 border-brand-200 text-brand-700'}`}
+             title={privacyMode ? "Mostrar Valores (Confirmar)" : "Ocultar Valores"}
+           >
+             {privacyMode ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+             {privacyMode ? 'OCULTO' : 'VISÍVEL'}
+           </button>
+           <Link to="/admin/agenda?new=true" className="flex-1 md:flex-none px-6 py-4 bg-brand-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-brand-700 transition shadow-xl shadow-brand-500/20 flex items-center justify-center gap-2">
+             <PlusCircle className="w-4 h-4" /> Novo Horário
+           </Link>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+        {[
+          { label: 'Consultas Hoje', value: hoje.length, color: 'bg-brand-600', icon: Calendar },
+          { label: 'Total Pacientes', value: patients.length, color: 'bg-indigo-600', icon: Users },
+          { label: 'Comparecimento', value: `${attendanceRate}%`, color: 'bg-emerald-600', icon: TrendingUp },
+          { label: 'Novos no Mês', value: newsThisMonth, color: 'bg-amber-600', icon: Clock },
+        ].map((stat, i) => (
+          <div key={i} className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-sm border border-slate-100 flex flex-col justify-between">
+            <div className={`${stat.color} w-10 h-10 md:w-14 md:h-14 rounded-2xl md:rounded-3xl flex items-center justify-center text-white mb-6`}>
+               <stat.icon className="w-5 h-5 md:w-7 md:h-7" />
+            </div>
+            <div>
+               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
+               <h3 className="text-2xl md:text-4xl font-black text-slate-900">{stat.value}</h3>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-10">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+              <Clock className="w-6 h-6 md:w-8 md:h-8 text-brand-600" />
+              Hoje
+            </h2>
+            <Link to="/admin/agenda" className="text-brand-600 font-black text-[10px] uppercase tracking-widest hover:underline">Ver Agenda</Link>
+          </div>
+
+          <div className="bg-white rounded-[2rem] md:rounded-[3.5rem] shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden divide-y divide-slate-50">
+            {loading ? (
+                <div className="p-16 text-center animate-pulse text-slate-300 font-bold uppercase text-xs tracking-widest">Acessando fluxos...</div>
+            ) : hoje.length === 0 ? (
+              <div className="p-16 md:p-24 text-center">
+                 <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-6 opacity-20" />
+                 <p className="text-slate-400 font-bold uppercase text-xs tracking-widest">Tudo em dia por aqui!</p>
+              </div>
+            ) : (
+              hoje.sort((a,b) => a.appointment_date.localeCompare(b.appointment_date)).map(a => (
+                <div key={a.id} className="p-6 md:p-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 hover:bg-slate-50 transition-colors group">
+                  <div className="flex items-center gap-6">
+                    <div className="text-brand-600 font-black text-2xl md:text-3xl tracking-tighter">
+                       {format(parseISO(a.appointment_date), "HH:mm")}
+                    </div>
+                    <div className="w-px h-10 bg-slate-100 hidden sm:block"></div>
+                    <div className="cursor-pointer" onClick={() => handlePatientClick(a)}>
+                       <h4 className="font-black text-slate-900 text-lg md:text-2xl tracking-tighter uppercase group-hover:text-brand-700 hover:underline">{a.patient_name}</h4>
+                       <div className="flex items-center gap-4 mt-1">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sessão Individual</p>
+                          {a.status === 'finished' && (
+                             <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${a.payment_status === 'paid' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
+                                {a.payment_status === 'paid' ? 'Pago' : 'Pendente'}
+                             </span>
+                          )}
+                       </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                     <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${a.status === 'confirmed' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : a.status === 'finished' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                        {a.status === 'confirmed' ? 'Confirmado' : a.status === 'finished' ? 'Finalizado' : 'Aguardando'}
+                     </span>
+                     <button onClick={() => handlePatientClick(a)} className="p-4 bg-slate-900 text-white rounded-2xl hover:bg-brand-600 transition-all shadow-lg">
+                        <ArrowRight className="w-5 h-5" />
+                     </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-8">
+           <div className="bg-slate-950 rounded-[2.5rem] md:rounded-[3.5rem] p-8 md:p-12 text-white shadow-2xl relative overflow-hidden group">
+              <div className="relative z-10">
+                <div className="w-12 h-12 bg-brand-600 rounded-2xl flex items-center justify-center mb-8">
+                   <DollarSign className="w-7 h-7" />
+                </div>
+                <p className="text-brand-400 font-black text-[10px] uppercase tracking-[0.3em] mb-2">Faturamento Recebido</p>
+                <h3 className="text-3xl md:text-4xl font-black mb-8 tracking-tighter">
+                  {formatCurrency(currentMonthRevenue)}
+                </h3>
+                
+                <div className="space-y-6">
+                   <div className="flex justify-between items-end mb-2">
+                       <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Fluxo Mensal</span>
+                       <span className="text-xs font-black text-brand-500">{revenueProgress}%</span>
+                   </div>
+                   <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-full bg-brand-500 transition-all duration-1000" style={{ width: `${revenueProgress}%` }}></div>
+                   </div>
+                </div>
+
+                <Link to="/admin/faturamento" className="w-full mt-10 inline-flex items-center justify-center gap-3 bg-white text-slate-950 py-5 rounded-[2rem] font-black text-[10px] uppercase tracking-[0.2em] hover:bg-brand-500 hover:text-white transition-all">
+                   <Wallet className="w-4 h-4" /> Ver Faturamento
+                </Link>
+              </div>
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-brand-600 opacity-20 rounded-full blur-[80px]"></div>
+           </div>
+
+           <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-100">
+             <h3 className="font-black text-slate-900 mb-6 uppercase text-[10px] tracking-[0.3em] text-slate-400">Crescimento</h3>
+             <div className="space-y-6">
+                <div className="flex items-center gap-5">
+                   <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl font-black">+{newsThisMonth}</div>
+                   <p className="text-sm font-bold text-slate-700">Novos Pacientes</p>
+                </div>
+                <div className="flex items-center gap-5">
+                   <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl font-black">94%</div>
+                   <p className="text-sm font-bold text-slate-700">Retenção Ativa</p>
+                </div>
+             </div>
+           </div>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,3 @@
+﻿src/api/webhook.ts(1,10): error TS1484: 'Agendamento' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/hooks/useBooking.ts(2,10): error TS1484: 'Agendamento' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/hooks/useBooking.ts(4,46): error TS6133: 'format' is declared but its value is never read.
