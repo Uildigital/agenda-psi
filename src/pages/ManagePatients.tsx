@@ -30,44 +30,52 @@ export default function ManagePatients() {
     if (!user) return;
 
     // ----- [AUTO-SYNC] -----
-    // Busca agendamentos órfãos (sem patient_id associado)
-    const { data: orphans } = await supabase
-      .from('appointments')
-      .select('whatsapp, patient_name')
-      .eq('doctor_id', user.id)
-      .is('patient_id', null);
+    try {
+      const { data: orphans, error: syncError } = await supabase
+        .from('appointments')
+        .select('whatsapp, patient_name')
+        .eq('doctor_id', user.id)
+        .is('patient_id', null);
 
-    if (orphans && orphans.length > 0) {
-      const patientMap = new Map();
-      orphans.forEach(a => {
-        if (!a.whatsapp) return;
-        if (!patientMap.has(a.whatsapp)) {
-          patientMap.set(a.whatsapp, a.patient_name);
-        }
-      });
+      if (syncError) throw syncError;
 
-      for (const [whatsapp, name] of patientMap) {
-        // Tenta achar ou criar
-        const { data: ptData } = await supabase
-          .from('patients')
-          .upsert({
-            doctor_id: user.id,
-            full_name: name,
-            whatsapp: whatsapp,
-            status: 'active'
-          }, { onConflict: 'doctor_id,whatsapp' })
-          .select()
-          .single();
+      if (orphans && orphans.length > 0) {
+        const patientMap = new Map();
+        orphans.forEach(a => {
+          if (!a.whatsapp) return;
+          if (!patientMap.has(a.whatsapp)) {
+            patientMap.set(a.whatsapp, a.patient_name);
+          }
+        });
 
-        if (ptData) {
-          // Vincula o agendamento ao novo / existente paciente
-          await supabase
-            .from('appointments')
-            .update({ patient_id: ptData.id })
-            .eq('doctor_id', user.id)
-            .eq('whatsapp', whatsapp);
+        for (const [whatsapp, name] of patientMap) {
+          const { data: ptData, error: upsertError } = await supabase
+            .from('patients')
+            .upsert({
+              doctor_id: user.id,
+              full_name: name,
+              whatsapp: whatsapp,
+              status: 'active'
+            }, { onConflict: 'doctor_id,whatsapp' })
+            .select()
+            .single();
+
+          if (upsertError) {
+             console.error(`Falha ao sincronizar paciente ${name}:`, upsertError.message);
+             continue;
+          }
+
+          if (ptData) {
+            await supabase
+              .from('appointments')
+              .update({ patient_id: ptData.id })
+              .eq('doctor_id', user.id)
+              .eq('whatsapp', whatsapp);
+          }
         }
       }
+    } catch (err: any) {
+      console.error('Erro Crítico no Auto-Sync:', err.message);
     }
     // ----- [/AUTO-SYNC] -----
 
