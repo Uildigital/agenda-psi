@@ -7,17 +7,12 @@ import {
   Save, 
   Plus, 
   FileText, 
-  Phone, 
-  Mail, 
-  CreditCard,
   History,
-  Clock,
   User,
   Activity,
   Eye,
   EyeOff,
-  Stethoscope,
-  ChevronDown
+  DollarSign
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -102,8 +97,7 @@ export default function PatientDetails() {
     setSaving(false);
   };
 
-  const handleAddSoapRecord = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  const handleAddSoapRecord = async () => {
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user || !id) return;
@@ -172,12 +166,11 @@ PLANO: ${newSoap.plano}
              onClick={() => setShowNewRecord(true)}
              className="flex-[3] md:flex-none px-8 py-4 bg-brand-600 text-white rounded-[2rem] font-black text-xs uppercase tracking-widest hover:bg-brand-700 transition shadow-xl shadow-brand-500/30 flex items-center justify-center gap-3 active:scale-95"
            >
-             <Plus className="w-5 h-5" /> Iniciar Evolução
+             <Plus className="w-4 h-4" /> Iniciar Evolução
            </button>
         </div>
       </div>
 
-      {/* Main Grid: Data & Records */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         
         {/* Patient Data Column */}
@@ -351,7 +344,7 @@ PLANO: ${newSoap.plano}
                   <label className="flex items-center gap-3 text-xs font-black text-brand-600 uppercase tracking-[0.2em]">
                      <div className="w-2 h-2 bg-indigo-600 rounded-full"></div>
                      A - Avaliação (Hipóteses)
-                  </h4>
+                  </label>
                   <textarea 
                     value={newSoap.avaliacao} onChange={e => setNewSoap({...newSoap, avaliacao: e.target.value})}
                     placeholder="Sua análise técnica do caso, evolução comparativa e insights profissionais."
@@ -363,7 +356,7 @@ PLANO: ${newSoap.plano}
                   <label className="flex items-center gap-3 text-xs font-black text-brand-600 uppercase tracking-[0.2em]">
                      <div className="w-2 h-2 bg-emerald-600 rounded-full"></div>
                      P - Plano (Conduta Próxima)
-                  </h4>
+                  </label>
                   <textarea 
                     value={newSoap.plano} onChange={e => setNewSoap({...newSoap, plano: e.target.value})}
                     placeholder="Intervenções planejadas, encaminhamentos, tarefas de casa ou temas para a próxima sessão."
@@ -384,8 +377,8 @@ PLANO: ${newSoap.plano}
                  onClick={() => handleAddSoapRecord()} disabled={saving}
                  className="flex-[2] py-5 bg-brand-600 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl shadow-brand-500/20 active:bg-brand-700 transition-all active:scale-95 flex items-center justify-center gap-3"
                >
-                 {saving ? <Plus className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                 SALVAR REGISTRO PSICOLÓGICO
+                 <Save className="w-5 h-5" />
+                 SALVAR REGISTRO
                </button>
             </div>
           </motion.div>
