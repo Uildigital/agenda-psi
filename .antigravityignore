@@ -1,0 +1,31 @@
+# Antigravity AI Ignore List
+# Files and directories that Antigravity should avoid reading to save context/tokens.
+
+# Dependencies & Build
+node_modules/
+dist/
+.npm/
+package-lock.json
+
+# Temporary & Logs
+*.log
+errors.txt
+errors8.txt
+tmp/
+/tmp/
+
+# Static Assets (Images, Icons)
+public/**/*.png
+public/**/*.jpg
+public/**/*.svg
+public/**/*.ico
+
+# Version Control
+.git/
+.vscode/
+
+# Configs (Only read if explicitly needed)
+postcss.config.js
+tailwind.config.js
+vite.config.ts
+tsconfig.*.json
