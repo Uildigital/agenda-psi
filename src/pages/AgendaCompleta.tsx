@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
 import type { Appointment, Patient, DoctorProfile } from '../types';
 import { 
@@ -14,14 +14,10 @@ import {
   ChevronRight,
   ChevronLeft,
   FileText,
-  Clock,
   XCircle,
-  MoreVertical,
   Trash2,
   CalendarDays,
-  UserCheck,
-  UserMinus,
-  RotateCcw
+  UserCheck
 } from 'lucide-react';
 import { format, parseISO, addDays, subDays, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
