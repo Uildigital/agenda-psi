@@ -16,7 +16,7 @@ CREATE TABLE public.patients (
 
 -- 2. Tabela de Prontuários (Clinical Records / SOAP Notes)
 CREATE TABLE public.medical_records (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  id uuid NOT NULL DEFAULT gen_random_uuid(),no dashboard
   patient_id uuid NOT NULL REFERENCES public.patients(id) ON DELETE CASCADE,
   doctor_id uuid NOT NULL REFERENCES auth.users(id),
   appointment_id uuid REFERENCES public.appointments(id) ON DELETE SET NULL,

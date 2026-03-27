@@ -3,6 +3,26 @@
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900 font-sans antialiased;
+    @apply bg-white md:bg-slate-50 text-slate-900 font-sans antialiased;
+  }
+
+  /* Prevent Zoom on Mobile Inputs */
+  input, select, textarea {
+    @apply text-[16px] md:text-sm;
+  }
+}
+
+@layer components {
+  /* Premium Micro-animations */
+  .transition-soft {
+    @apply transition-all duration-300 cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .mobile-touch-target {
+    @apply min-h-[48px] min-w-[48px] flex items-center justify-center cursor-pointer active:scale-95 transition-transform;
+  }
+  
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }

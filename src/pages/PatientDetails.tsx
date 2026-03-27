@@ -15,7 +15,9 @@ import {
   User,
   Activity,
   Eye,
-  EyeOff
+  EyeOff,
+  Stethoscope,
+  ChevronDown
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -48,7 +50,6 @@ export default function PatientDetails() {
   useEffect(() => {
     if (id) fetchData();
     const savedPrivacy = localStorage.getItem('psi_privacy_mode');
-    // If we have a saved state, use it. Otherwise, default is true (hidden).
     if (savedPrivacy !== null) {
       setPrivacyMode(savedPrivacy === 'true');
     } else {
@@ -58,13 +59,11 @@ export default function PatientDetails() {
 
   const togglePrivacy = () => {
     if (privacyMode) {
-      // User wants to SEE values. Ask confirmation.
       if (window.confirm('Deseja tornar os valores visíveis agora?')) {
         setPrivacyMode(false);
         localStorage.setItem('psi_privacy_mode', 'false');
       }
     } else {
-      // User wants to HIDE values. Just do it.
       setPrivacyMode(true);
       localStorage.setItem('psi_privacy_mode', 'true');
     }
@@ -81,12 +80,10 @@ export default function PatientDetails() {
       setPatient(pt as Patient);
       setEditPatient(pt);
       
-      // Fetch History using WhatsApp
       const { data: appts } = await supabase.from('appointments').select('*').eq('whatsapp', pt.whatsapp).order('appointment_date', { ascending: false });
       if (appts) setAppointments(appts as Appointment[]);
     }
 
-    // Fetch Records
     const { data: recs } = await supabase.from('medical_records').select('*').eq('patient_id', id).order('created_at', { ascending: false });
     if (recs) setRecords(recs as MedicalRecord[]);
 
@@ -100,14 +97,13 @@ export default function PatientDetails() {
        setPatient(prev => prev ? { ...prev, ...editPatient } : null);
        alert('Dados atualizados com sucesso!');
     } else {
-       console.error('Update Patient Error:', error);
        alert('Erro ao salvar: ' + error.message);
     }
     setSaving(false);
   };
 
-  const handleAddSoapRecord = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddSoapRecord = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user || !id) return;
@@ -135,6 +131,9 @@ PLANO: ${newSoap.plano}
       setRecords(prev => [data as MedicalRecord, ...prev]);
       setShowNewRecord(false);
       setNewSoap({ subjetivo: '', objetivo: '', avaliacao: '', plano: '' });
+      alert('Prontuário salvo com sucesso!');
+    } else {
+      alert('Erro ao salvar prontuário.');
     }
     setSaving(false);
   };
@@ -149,256 +148,249 @@ PLANO: ${newSoap.plano}
   if (!patient) return <div className="p-10 text-center text-red-500 font-black">PACIENTE NÃO ENCONTRADO.</div>;
 
   return (
-    <div className="animate-in fade-in duration-700 pb-32 space-y-10">
+    <div className="animate-in fade-in duration-700 pb-32">
       
-      {/* Header Sticky */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 sticky top-0 md:relative bg-slate-50/80 backdrop-blur-md py-4 z-40">
-        <div className="flex items-center gap-6">
-           <button onClick={() => navigate(-1)} className="p-4 bg-white text-slate-400 hover:text-brand-600 rounded-2xl shadow-sm border border-slate-100 transition-all">
+      {/* Mobile-Friendly Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 mt-2">
+        <div className="flex items-center gap-5">
+           <button onClick={() => navigate(-1)} className="p-4 bg-white text-slate-400 rounded-2xl shadow-sm border border-slate-100 active:scale-90 transition-transform">
               <ArrowLeft className="w-6 h-6" />
            </button>
            <div>
-              <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none">{patient.full_name}</h1>
-              <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">ID Único: PSi-{(patient.id.substring(0,4)).toUpperCase()}</p>
+              <h1 className="text-2xl md:text-3xl font-black text-slate-950 tracking-tighter uppercase leading-none">{patient.full_name}</h1>
+              <span className="text-slate-400 font-black text-[9px] uppercase tracking-widest mt-1">Status: Ativo na Clínica</span>
            </div>
         </div>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex gap-2">
            <button 
              onClick={togglePrivacy}
-             className="p-4 bg-white border-2 border-slate-100 text-slate-400 rounded-2xl hover:text-brand-600 transition shadow-sm"
-             title={privacyMode ? "Mostrar Valores (Exige Confirmação)" : "Ocultar Valores"}
+             className="flex-1 md:flex-none p-4 bg-white border border-slate-200 text-slate-400 rounded-2xl active:text-brand-600 transition shadow-sm flex items-center justify-center"
            >
              {privacyMode ? <Eye className="w-6 h-6" /> : <EyeOff className="w-6 h-6" />}
            </button>
            <button 
-             onClick={handleUpdatePatient} disabled={saving}
-             className="px-8 py-4 bg-white text-slate-900 border-2 border-slate-100 rounded-[2rem] font-black text-xs uppercase tracking-widest hover:border-brand-500 hover:text-brand-700 transition shadow-sm flex items-center gap-2"
-           >
-             {saving ? <Clock className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-             Salvar
-           </button>
-           <button 
              onClick={() => setShowNewRecord(true)}
-             className="px-8 py-4 bg-brand-600 text-white rounded-[2rem] font-black text-xs uppercase tracking-widest hover:bg-brand-700 transition shadow-xl shadow-brand-500/30 flex items-center gap-2 active:scale-95"
+             className="flex-[3] md:flex-none px-8 py-4 bg-brand-600 text-white rounded-[2rem] font-black text-xs uppercase tracking-widest hover:bg-brand-700 transition shadow-xl shadow-brand-500/30 flex items-center justify-center gap-3 active:scale-95"
            >
-             <Plus className="w-4 h-4" /> Nova Evolução
+             <Plus className="w-5 h-5" /> Iniciar Evolução
            </button>
         </div>
       </div>
 
+      {/* Main Grid: Data & Records */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         
-        {/* Left Column: Patient Data */}
-        <div className="space-y-10">
-           <div className="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/20 border border-slate-100 space-y-8">
-              <h3 className="text-[10px] font-black text-brand-600 uppercase tracking-[0.3em] flex items-center gap-3">
-                <User className="w-5 h-5" /> Cadastro Geral
+        {/* Patient Data Column */}
+        <div className="space-y-10 lg:sticky lg:top-10 lg:h-fit">
+           <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-slate-100 space-y-8">
+              <h3 className="text-[10px] font-black text-brand-600 uppercase tracking-[0.4em] flex items-center gap-3">
+                <User className="w-5 h-5" /> Ficha Cadastral
               </h3>
               
               <div className="space-y-6">
                  <div>
-                    <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest block mb-2">Nome Completo</label>
+                    <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest block mb-1">Nome Completo</label>
                     <input 
                       type="text" value={editPatient.full_name} onChange={e => setEditPatient({...editPatient, full_name: e.target.value})}
-                      className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-4 focus:ring-brand-500/10 transition-all font-bold text-slate-700"
+                      className="w-full p-4 bg-slate-50 rounded-2xl border-none font-bold text-slate-700"
                     />
                  </div>
                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                       <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest block mb-2">WhatsApp</label>
-                       <div className="relative">
-                          <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                          <input 
-                            type="tel" value={editPatient.whatsapp || ''} onChange={e => setEditPatient({...editPatient, whatsapp: e.target.value})}
-                            className="w-full pl-10 pr-4 py-4 bg-slate-50 rounded-2xl border-none font-bold"
-                          />
-                       </div>
+                       <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest block mb-1">WhatsApp</label>
+                       <input 
+                         type="tel" value={editPatient.whatsapp || ''} onChange={e => setEditPatient({...editPatient, whatsapp: e.target.value})}
+                         className="w-full p-4 bg-slate-50 rounded-2xl border-none font-bold"
+                       />
                     </div>
                     <div>
-                       <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest block mb-2">CPF</label>
-                       <div className="relative">
-                          <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                          <input 
-                            type="text" value={editPatient.cpf || ''} onChange={e => setEditPatient({...editPatient, cpf: e.target.value})}
-                            className="w-full pl-10 pr-4 py-4 bg-slate-50 rounded-2xl border-none font-bold"
-                          />
-                       </div>
-                    </div>
-                 </div>
-                 <div>
-                    <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest block mb-2">E-mail</label>
-                    <div className="relative">
-                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                       <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest block mb-1">CPF</label>
                        <input 
-                         type="email" value={editPatient.email || ''} onChange={e => setEditPatient({...editPatient, email: e.target.value})}
-                         className="w-full pl-10 pr-4 py-4 bg-slate-50 rounded-2xl border-none font-bold"
+                         type="text" value={editPatient.cpf || ''} onChange={e => setEditPatient({...editPatient, cpf: e.target.value})}
+                         className="w-full p-4 bg-slate-50 rounded-2xl border-none font-bold"
                        />
                     </div>
                  </div>
                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                       <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest block mb-1">Valor Sessão (R$)</label>
+                       <label className="text-[9px] font-black text-slate-300 uppercase tracking-widest block mb-1 flex items-center gap-2">
+                          <DollarSign className="w-3 h-3 text-brand-600" /> Valor / Sessão
+                       </label>
                        <input 
                          type={privacyMode ? "password" : "number"} value={editPatient.base_session_value || 160} onChange={e => setEditPatient({...editPatient, base_session_value: Number(e.target.value)})}
-                         className="w-full p-4 bg-slate-50 rounded-2xl border-none font-bold outline-none"
+                         className="w-full p-4 bg-slate-50 rounded-2xl border-none font-black text-brand-700"
                        />
                     </div>
                     <div>
-                       <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest block mb-1">Data Nascimento</label>
+                       <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest block mb-1">Nascimento</label>
                        <input 
                          type="date" value={editPatient.date_of_birth || ''} onChange={e => setEditPatient({...editPatient, date_of_birth: e.target.value})}
-                         className="w-full p-4 bg-slate-50 rounded-2xl border-none font-bold outline-none"
+                         className="w-full p-4 bg-slate-50 rounded-2xl border-none font-bold"
                        />
                     </div>
                  </div>
-                 <div>
-                    <label className="text-[10px] font-black text-slate-300 uppercase tracking-widest block mb-1">Notas Administrativas</label>
-                    <textarea 
-                      rows={3} value={editPatient.notes || ''} onChange={e => setEditPatient({...editPatient, notes: e.target.value})}
-                      className="w-full p-4 bg-slate-50 rounded-2xl border-none font-bold resize-none outline-none"
-                    />
-                 </div>
+                 <button onClick={handleUpdatePatient} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-brand-600 transition shadow-lg">
+                    Salvar Alterações
+                 </button>
               </div>
            </div>
 
-           {/* Appointment History Quick View */}
-           <div className="bg-slate-950 rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden group">
+           <div className="bg-slate-950 rounded-[3rem] p-10 text-white shadow-2xl overflow-hidden relative group hidden md:block">
               <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
-                 <History className="w-5 h-5 text-brand-600" /> Histórico de Sessões
+                 <History className="w-5 h-5 text-brand-600" /> Histórico Últimas 5
               </h3>
               <div className="space-y-6">
                  {appointments.length === 0 ? (
-                    <p className="text-xs text-slate-500 font-bold uppercase tracking-widest italic">Sem consultas registradas.</p>
+                    <p className="text-xs text-slate-500 font-bold uppercase italic">Sem registros.</p>
                  ) : (
                     appointments.slice(0, 5).map(a => (
-                       <div key={a.id} className="flex items-center justify-between group/item">
+                       <div key={a.id} className="flex items-center justify-between">
                           <div>
-                             <p className="font-bold text-sm tracking-tight">{format(parseISO(a.appointment_date), "dd MMMM yyyy", { locale: ptBR })}</p>
-                             <span className={`text-[10px] font-black uppercase tracking-widest ${a.status === 'finished' ? 'text-emerald-500' : 'text-amber-500'}`}>
+                             <p className="font-bold text-sm">{format(parseISO(a.appointment_date), "dd MMM yyyy", { locale: ptBR })}</p>
+                             <span className={`text-[9px] font-black uppercase tracking-widest ${a.status === 'finished' ? 'text-emerald-500' : 'text-amber-500'}`}>
                                 {a.status === 'finished' ? 'Realizada' : 'Pendente'}
                              </span>
                           </div>
-                          <div className="text-right">
-                             <p className="text-xs font-black text-slate-500 uppercase">{format(parseISO(a.appointment_date), "HH:mm")}</p>
-                          </div>
+                          <p className="text-xs font-black text-slate-500">{format(parseISO(a.appointment_date), "HH:mm")}</p>
                        </div>
                     ))
                  )}
               </div>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-600 opacity-20 rounded-full blur-3xl -mr-16 -mt-16 group-hover:scale-150 transition-transform"></div>
            </div>
         </div>
 
-        {/* Right Column: Medical Records (Evolution) */}
+        {/* Clinical Records Column */}
         <div className="lg:col-span-2 space-y-10">
            
            <div className="flex items-center justify-between px-2">
-              <h2 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-4">
-                 <FileText className="w-8 h-8 text-brand-600" />
-                 Evolução Clínica (SOAP)
+              <h2 className="text-2xl font-black text-slate-950 tracking-tight flex items-center gap-4 uppercase">
+                 <FileText className="w-7 h-7 text-brand-600" />
+                 Evolução Clínica
               </h2>
-              <button 
-                onClick={() => setShowNewRecord(!showNewRecord)}
-                className="text-brand-600 font-black text-[10px] uppercase tracking-[0.2em] bg-brand-50 px-5 py-2.5 rounded-2xl hover:bg-brand-600 hover:text-white transition-all"
-              >
-                {showNewRecord ? 'Fechar' : 'Nova Entrada'}
-              </button>
+              <div className="h-10 w-px bg-slate-100 hidden sm:block"></div>
+              <p className="hidden sm:block text-[10px] font-black text-slate-400 uppercase tracking-widest">{records.length} Atendimentos Digitais</p>
            </div>
 
-           <AnimatePresence>
-             {showNewRecord && (
-               <motion.form 
-                 initial={{ opacity: 0, scale: 0.98, y: -20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.98, y: -20 }}
-                 onSubmit={handleAddSoapRecord} 
-                 className="bg-white p-10 rounded-[3.5rem] shadow-2xl border-2 border-brand-50 space-y-8"
-               >
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                     <div>
-                        <label className="text-[10px] font-black text-brand-600 uppercase tracking-[0.3em] block mb-3">Subjetivo</label>
-                        <textarea 
-                           required rows={4} value={newSoap.subjetivo} onChange={e => setNewSoap({...newSoap, subjetivo: e.target.value})}
-                           placeholder="Relato do paciente..."
-                           className="w-full p-6 bg-slate-50 rounded-3xl border-none font-medium text-slate-700 outline-none focus:ring-4 focus:ring-brand-500/10 transition-all resize-none"
-                        />
-                     </div>
-                     <div>
-                        <label className="text-[10px] font-black text-brand-600 uppercase tracking-[0.3em] block mb-3">Objetivo</label>
-                        <textarea 
-                           required rows={4} value={newSoap.objetivo} onChange={e => setNewSoap({...newSoap, objetivo: e.target.value})}
-                           placeholder="Observações do psicólogo..."
-                           className="w-full p-6 bg-slate-50 rounded-3xl border-none font-medium text-slate-700 outline-none focus:ring-4 focus:ring-brand-500/10 transition-all resize-none"
-                        />
-                     </div>
-                     <div>
-                        <label className="text-[10px] font-black text-brand-600 uppercase tracking-[0.3em] block mb-3">Avaliação</label>
-                        <textarea 
-                           required rows={4} value={newSoap.avaliacao} onChange={e => setNewSoap({...newSoap, avaliacao: e.target.value})}
-                           placeholder="Hipóteses e progresso..."
-                           className="w-full p-6 bg-slate-50 rounded-3xl border-none font-medium text-slate-700 outline-none focus:ring-4 focus:ring-brand-500/10 transition-all resize-none"
-                        />
-                     </div>
-                     <div>
-                        <label className="text-[10px] font-black text-brand-600 uppercase tracking-[0.3em] block mb-3">Plano</label>
-                        <textarea 
-                           required rows={4} value={newSoap.plano} onChange={e => setNewSoap({...newSoap, plano: e.target.value})}
-                           placeholder="Próximos passos..."
-                           className="w-full p-6 bg-slate-50 rounded-3xl border-none font-medium text-slate-700 outline-none focus:ring-4 focus:ring-brand-500/10 transition-all resize-none"
-                        />
-                     </div>
-                  </div>
-                  <div className="flex justify-end gap-4">
-                     <button type="button" onClick={() => setShowNewRecord(false)} className="px-10 py-5 bg-white text-slate-400 font-black text-[10px] uppercase tracking-widest hover:text-slate-900 transition">Cancelar</button>
-                     <button 
-                       type="submit" disabled={saving}
-                       className="px-12 py-5 bg-brand-600 text-white font-black text-[10px] uppercase tracking-widest rounded-3xl shadow-xl shadow-brand-500/20 hover:bg-brand-700 transition"
-                     >
-                       {saving ? <Clock className="w-5 h-5 animate-spin mx-auto" /> : 'Confirmar Registro'}
-                     </button>
-                  </div>
-               </motion.form>
-             )}
-           </AnimatePresence>
-
-           <div className="space-y-8">
-              {records.length === 0 ? (
-                 <div className="p-24 text-center bg-white rounded-[3.5rem] border border-dashed border-slate-200">
+           <div className="space-y-6">
+              {records.length === 0 && !showNewRecord && (
+                 <div className="p-20 text-center bg-white rounded-[3.5rem] border border-dashed border-slate-200">
                     <Activity className="w-16 h-16 text-slate-100 mx-auto mb-6" />
-                    <h3 className="text-xl font-black text-slate-900 tracking-tight">Sem evolução clínica registrada</h3>
-                    <p className="text-slate-400 mt-2 max-w-sm mx-auto font-medium leading-relaxed">Clique em "Nova Entrada" para iniciar o registro clínico digital conforme as boas práticas do CRP.</p>
+                    <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase">Sem registros clínicos</h3>
+                    <p className="text-slate-400 mt-2 font-bold uppercase text-[10px] tracking-widest">Inicie um novo SOAP para registrar o progresso.</p>
                  </div>
-              ) : (
-                records.map(rec => (
-                   <motion.div 
-                     layout key={rec.id} 
-                     className="bg-white p-10 rounded-[3.5rem] shadow-xl border border-slate-100 relative group overflow-hidden"
-                   >
-                      <div className="flex items-center justify-between mb-8 pb-6 border-b border-slate-50">
+              )}
+              
+              {records.map(rec => (
+                   <div key={rec.id} className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 hover:border-brand-200 transition-colors">
+                      <div className="flex items-center justify-between mb-6 pb-6 border-b border-slate-50">
                          <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 bg-slate-50 text-brand-600 rounded-2xl flex items-center justify-center font-black text-lg">
-                               Ψ
-                            </div>
+                            <div className="w-12 h-12 bg-slate-50 text-brand-600 rounded-xl flex items-center justify-center font-black">Ψ</div>
                             <div>
-                               <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-1">DATA DA SESSÃO</p>
-                               <h4 className="text-2xl font-black text-slate-900 tracking-tighter">{format(parseISO(rec.created_at), "dd 'de' MMMM", { locale: ptBR })}</h4>
+                               <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">SESSÃO EM</p>
+                               <h4 className="text-xl font-black text-slate-950 tracking-tighter uppercase">{format(parseISO(rec.created_at), "dd 'de' MMMM, yyyy", { locale: ptBR })}</h4>
                             </div>
                          </div>
-                         <div className="text-right">
-                             <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none mb-1">Registro Digital</p>
-                             <p className="text-sm font-bold text-brand-600 uppercase tracking-tight">{format(parseISO(rec.created_at), "yyyy")}</p>
-                         </div>
+                         <button className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:text-brand-600"><Plus className="w-4 h-4" /></button>
                       </div>
-
-                      <div className="whitespace-pre-line text-slate-600 font-medium leading-relaxed prose prose-slate max-w-none">
+                      <div className="whitespace-pre-line text-slate-600 font-medium leading-relaxed prose prose-slate max-w-none px-2">
                          {rec.content}
                       </div>
-                      
-                      <div className="absolute right-0 top-0 w-32 h-32 bg-slate-50 opacity-0 group-hover:opacity-100 rounded-full blur-3xl transition-opacity"></div>
-                   </motion.div>
+                   </div>
                 ))
-               )}
+               }
            </div>
         </div>
       </div>
+
+      {/* FULL-SCREEN SOAP RECORD MODAL */}
+      <AnimatePresence>
+        {showNewRecord && (
+          <motion.div 
+            initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="fixed inset-0 z-[200] bg-white flex flex-col pt-4 safe-bottom"
+          >
+            {/* Header SOAP */}
+            <div className="px-8 py-6 flex items-center justify-between border-b border-slate-50">
+               <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-brand-50 text-brand-600 rounded-2xl flex items-center justify-center font-black">SOAP</div>
+                  <div>
+                    <h2 className="font-black text-xl text-slate-950 uppercase tracking-tighter">Registrar Evolução</h2>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Paciente: {patient.full_name}</p>
+                  </div>
+               </div>
+               <button onClick={() => setShowNewRecord(false)} className="w-12 h-12 bg-slate-50 text-slate-900 rounded-full flex items-center justify-center text-lg font-black active:bg-slate-200 transition-colors">✕</button>
+            </div>
+
+            {/* Scrollable Content (Inputs 16px) */}
+            <div className="flex-1 overflow-y-auto p-8 space-y-10 pb-32">
+               <div className="space-y-4">
+                  <label className="flex items-center gap-3 text-xs font-black text-brand-600 uppercase tracking-[0.2em]">
+                     <div className="w-2 h-2 bg-brand-600 rounded-full animate-pulse"></div>
+                     S - Subjetivo (Fala do Paciente)
+                  </label>
+                  <textarea 
+                    value={newSoap.subjetivo} onChange={e => setNewSoap({...newSoap, subjetivo: e.target.value})}
+                    placeholder="O que o paciente relatou hoje sobre queixas, sentimentos e percepções?"
+                    className="w-full p-6 bg-slate-50 rounded-[2rem] border-none outline-none font-bold text-slate-700 min-h-[150px] resize-none focus:ring-4 focus:ring-brand-500/10 transition-all placeholder:text-slate-300"
+                  />
+               </div>
+
+               <div className="space-y-4">
+                  <label className="flex items-center gap-3 text-xs font-black text-brand-600 uppercase tracking-[0.2em]">
+                     <div className="w-2 h-2 bg-slate-600 rounded-full"></div>
+                     O - Objetivo (Observação Técnica)
+                  </label>
+                  <textarea 
+                    value={newSoap.objetivo} onChange={e => setNewSoap({...newSoap, objetivo: e.target.value})}
+                    placeholder="Aparência, fala, humor, postura, comportamento e sinais clínicos observados."
+                    className="w-full p-6 bg-slate-50 rounded-[2rem] border-none outline-none font-bold text-slate-700 min-h-[150px] resize-none focus:ring-4 focus:ring-brand-500/10 transition-all placeholder:text-slate-300"
+                  />
+               </div>
+
+               <div className="space-y-4">
+                  <label className="flex items-center gap-3 text-xs font-black text-brand-600 uppercase tracking-[0.2em]">
+                     <div className="w-2 h-2 bg-indigo-600 rounded-full"></div>
+                     A - Avaliação (Hipóteses)
+                  </h4>
+                  <textarea 
+                    value={newSoap.avaliacao} onChange={e => setNewSoap({...newSoap, avaliacao: e.target.value})}
+                    placeholder="Sua análise técnica do caso, evolução comparativa e insights profissionais."
+                    className="w-full p-6 bg-slate-50 rounded-[2rem] border-none outline-none font-bold text-slate-700 min-h-[150px] resize-none focus:ring-4 focus:ring-brand-500/10 transition-all placeholder:text-slate-300"
+                  />
+               </div>
+
+               <div className="space-y-4">
+                  <label className="flex items-center gap-3 text-xs font-black text-brand-600 uppercase tracking-[0.2em]">
+                     <div className="w-2 h-2 bg-emerald-600 rounded-full"></div>
+                     P - Plano (Conduta Próxima)
+                  </h4>
+                  <textarea 
+                    value={newSoap.plano} onChange={e => setNewSoap({...newSoap, plano: e.target.value})}
+                    placeholder="Intervenções planejadas, encaminhamentos, tarefas de casa ou temas para a próxima sessão."
+                    className="w-full p-6 bg-slate-50 rounded-[2rem] border-none outline-none font-bold text-slate-700 min-h-[150px] resize-none focus:ring-4 focus:ring-brand-500/10 transition-all placeholder:text-slate-300"
+                  />
+               </div>
+            </div>
+
+            {/* STICKY BOTTOM SAVE BUTTON */}
+            <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-100 flex gap-4 backdrop-blur-md safe-bottom">
+               <button 
+                 onClick={() => setShowNewRecord(false)}
+                 className="flex-1 py-5 bg-slate-50 text-slate-400 font-black text-[10px] uppercase tracking-widest rounded-2xl active:bg-slate-200 transition-colors"
+               >
+                 Cancelar
+               </button>
+               <button 
+                 onClick={() => handleAddSoapRecord()} disabled={saving}
+                 className="flex-[2] py-5 bg-brand-600 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl shadow-brand-500/20 active:bg-brand-700 transition-all active:scale-95 flex items-center justify-center gap-3"
+               >
+                 {saving ? <Plus className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                 SALVAR REGISTRO PSICOLÓGICO
+               </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
