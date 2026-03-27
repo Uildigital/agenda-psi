@@ -18,7 +18,8 @@ import {
   X,
   Stethoscope,
   AlertCircle,
-  ClipboardList
+  ClipboardList,
+  TrendingUp
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -171,24 +172,28 @@ ${newSoap.plano || 'Seguimento terapêutico padrão.'}
       
       {/* PROFESSIONAL TITLE BAR */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8 pt-4">
-        <div className="flex items-center gap-6">
-           <button onClick={() => navigate(-1)} className="w-14 h-14 bg-white text-slate-400 rounded-2xl shadow-sm border border-slate-100 hover:text-slate-950 transition-all active:scale-90 flex items-center justify-center">
-              <ArrowLeft className="w-6 h-6" />
-           </button>
-            <div>
-               <div className="flex items-center gap-3 mb-1">
-                  <h1 className="text-3xl md:text-5xl font-black text-slate-950 tracking-tighter uppercase leading-none">{patient.full_name}</h1>
-                  <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border mt-1 hidden sm:block ${patient.status === 'inactive' ? 'bg-slate-100 text-slate-400 border-slate-200' : 'bg-green-50 text-green-600 border-green-100'}`}>
-                     {patient.status === 'inactive' ? 'Inativo' : 'Ativo'}
-                  </span>
-               </div>
-               <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest flex items-center gap-4">
-                  Código: {patient.id.substring(0,8).toUpperCase()}
-                  <span className="w-1 h-1 bg-slate-200 rounded-full"></span>
-                  WhatsApp: {patient.whatsapp || 'Pendente'}
-               </p>
-            </div>
-         </div>
+            <div className="flex items-center gap-6">
+               <button onClick={() => navigate(-1)} className="w-14 h-14 bg-white text-slate-400 rounded-2xl shadow-sm border border-slate-100 hover:text-slate-950 transition-all active:scale-90 flex items-center justify-center">
+                  <ArrowLeft className="w-6 h-6" />
+               </button>
+                <div>
+                   <div className="flex flex-wrap items-center gap-3 mb-2">
+                      <h1 className="text-3xl md:text-6xl font-black text-slate-950 tracking-tighter uppercase leading-none">{patient.full_name}</h1>
+                      <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border mt-1 ${patient.status === 'inactive' ? 'bg-slate-100 text-slate-400 border-slate-200' : 'bg-brand-50 text-brand-600 border-brand-200'}`}>
+                         {patient.status === 'inactive' ? 'Inativo' : 'Paciente em Acompanhamento'}
+                      </span>
+                   </div>
+                   <div className="flex flex-wrap items-center gap-6">
+                     <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest flex items-center gap-2">
+                        <span className="w-2 h-2 bg-brand-500 rounded-full"></span>
+                        ID: {patient.id.substring(0,8).toUpperCase()}
+                     </p>
+                     <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest flex items-center gap-2">
+                        <Smartphone className="w-3 h-3" /> WhatsApp: {patient.whatsapp || 'Pendente'}
+                     </p>
+                   </div>
+                </div>
+             </div>
 
          <div className="flex flex-wrap items-center gap-3">
              <button 
@@ -313,15 +318,52 @@ ${newSoap.plano || 'Seguimento terapêutico padrão.'}
         {/* MAIN COLUMN: CLINICAL TIMELINE */}
         <div className="xl:col-span-3 space-y-12">
            
-           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 px-4">
-              <h2 className="text-2xl md:text-3xl font-black text-slate-950 tracking-tighter flex items-center gap-5 uppercase">
-                 <FileText className="w-10 h-10 text-brand-600" />
-                 Evolução Clínica Digital
-              </h2>
-              <div className="flex items-center gap-4 bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
-                 <div className="w-10 h-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center font-black">{records.length}</div>
-                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest pr-2">Sessões Registradas</p>
+           {/* PC: QUICK CLINICAL KPI DASHBOARD */}
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 hidden md:grid">
+              <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                 <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-4">Aditividade</p>
+                 <div className="flex items-center justify-between">
+                    <h4 className="text-2xl font-black text-slate-900">85%</h4>
+                    <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+                       <TrendingUp className="w-5 h-5" />
+                    </div>
+                 </div>
               </div>
+              <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                 <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-4">Última Sessão</p>
+                 <div className="flex items-center justify-between">
+                    <h4 className="text-xl font-black text-slate-900">{records.length > 0 ? format(parseISO(records[0].created_at), "dd/MM/yy") : '---'}</h4>
+                    <div className="w-10 h-10 bg-brand-50 text-brand-600 rounded-xl flex items-center justify-center">
+                       <Clock className="w-5 h-5" />
+                    </div>
+                 </div>
+              </div>
+              <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                 <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-4">Ticket Médio</p>
+                 <div className="flex items-center justify-between">
+                    <h4 className="text-2xl font-black text-slate-900">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(patient.base_session_value || 160)}</h4>
+                    <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+                       <DollarSign className="w-5 h-5" />
+                    </div>
+                 </div>
+              </div>
+           </div>
+
+           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 px-6 py-10 bg-white rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+              <div className="relative z-10">
+                <h2 className="text-2xl md:text-4xl font-black text-slate-950 tracking-tighter flex items-center gap-5 uppercase">
+                   <FileText className="w-12 h-12 text-brand-600" />
+                   Evolução Clínica Digital
+                </h2>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] ml-16 mt-2">Linha do Tempo de Atendimentos Profissionais</p>
+              </div>
+              <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-3xl border border-slate-100 relative z-10">
+                 <div className="w-12 h-12 bg-white text-brand-600 rounded-2xl flex items-center justify-center font-black shadow-sm text-xl">{records.length}</div>
+                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest pr-4">Sessões Totais</p>
+              </div>
+              
+              {/* PC Decoration */}
+              <div className="absolute right-0 top-0 w-64 h-64 bg-brand-500/[0.03] rounded-full blur-3xl -mr-32 -mt-32 group-hover:bg-brand-500/[0.06] transition-all"></div>
            </div>
 
            <div className="space-y-8 relative">

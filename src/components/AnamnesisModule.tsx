@@ -128,113 +128,131 @@ export default function AnamnesisModule({ patient, onClose, onSave }: AnamnesisM
   return (
     <div className="fixed inset-0 z-[500] bg-slate-950/20 backdrop-blur-md flex items-center justify-center p-4 md:p-10">
       <motion.div 
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        initial={{ opacity: 0, scale: 0.98, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="w-full max-w-6xl h-full max-h-[90vh] bg-white rounded-[3rem] shadow-2xl overflow-hidden flex flex-col relative border border-white"
+        className="w-full max-w-7xl h-full max-h-[92vh] bg-white rounded-[3.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row relative border border-white/20"
       >
-        {/* HEADER */}
-        <div className="px-10 py-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
-          <div className="flex items-center gap-6">
-            <div className="w-14 h-14 bg-brand-600 text-white rounded-2xl flex items-center justify-center shadow-xl shadow-brand-500/20">
+        {/* DESKTOP SIDEBAR / MOBILE TOPBAR */}
+        <div className="w-full md:w-80 bg-slate-50 border-b md:border-b-0 md:border-r border-slate-100 flex flex-col shrink-0">
+          <div className="p-8 hidden md:block">
+            <div className="w-14 h-14 bg-brand-600 text-white rounded-2xl flex items-center justify-center shadow-xl shadow-brand-500/20 mb-6">
               <ClipboardList className="w-7 h-7" />
             </div>
-            <div>
-              <p className="text-[9px] font-black text-brand-600 uppercase tracking-[0.3em] mb-1">Módulo de Anamnese Profissional</p>
-              <h2 className="text-2xl font-black text-slate-950 uppercase tracking-tighter leading-tight">
-                {patient.full_name}
-              </h2>
+            <p className="text-[9px] font-black text-brand-600 uppercase tracking-[0.3em] mb-1">Módulo de Anamnese</p>
+            <h2 className="text-xl font-black text-slate-950 uppercase tracking-tighter leading-tight">
+              {patient.full_name}
+            </h2>
+          </div>
+
+          <nav className="flex md:flex-col p-4 md:p-6 gap-2 overflow-x-auto md:overflow-y-auto no-scrollbar">
+            {STEPS.map((step, idx) => {
+              const Icon = step.icon;
+              const isActive = currentStep === idx;
+              const isDone = currentStep > idx;
+              
+              return (
+                <button
+                  key={step.id}
+                  onClick={() => setCurrentStep(idx)}
+                  className={`flex items-center gap-4 p-4 rounded-2xl transition-all group shrink-0 md:shrink-1 text-left ${isActive ? 'bg-white shadow-xl shadow-slate-200/50 text-brand-600' : 'text-slate-400 hover:bg-white/50'}`}
+                >
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center border-2 transition-all ${isActive ? 'border-brand-500 bg-brand-50' : isDone ? 'border-emerald-500 bg-emerald-50 text-emerald-500' : 'border-slate-100 group-hover:border-slate-300'}`}>
+                    {isDone ? <CheckCircle2 className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
+                  </div>
+                  <div className="hidden md:block">
+                    <p className={`text-[9px] font-black uppercase tracking-widest ${isActive ? 'opacity-100' : 'opacity-40'}`}>Passo 0{idx + 1}</p>
+                    <span className={`text-[11px] font-black uppercase tracking-tight ${isActive ? 'text-slate-900' : ''}`}>
+                      {step.label}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </nav>
+
+          <div className="mt-auto p-8 hidden md:block">
+            <div className="p-6 bg-brand-50/50 rounded-3xl border border-brand-100">
+              <p className="text-[10px] font-bold text-brand-700 leading-relaxed">Arquivamento clínico seguindo normas de proteção de dados (LGPD).</p>
             </div>
           </div>
-          <button 
-            onClick={onClose}
-            className="w-12 h-12 bg-white border border-slate-100 text-slate-400 rounded-full flex items-center justify-center hover:text-slate-950 hover:border-slate-300 transition-all active:scale-90"
-          >
-            <X className="w-6 h-6" />
-          </button>
         </div>
 
-        {/* STEPPER NAVIGATION */}
-        <div className="px-10 py-6 bg-white border-b border-slate-50 flex items-center gap-8 overflow-x-auto no-scrollbar">
-          {STEPS.map((step, idx) => {
-            const Icon = step.icon;
-            const isActive = currentStep === idx;
-            const isDone = currentStep > idx;
-            
-            return (
-              <button
-                key={step.id}
-                onClick={() => setCurrentStep(idx)}
-                className={`flex items-center gap-3 whitespace-nowrap transition-all group ${isActive ? 'text-brand-600' : isDone ? 'text-emerald-500' : 'text-slate-300'}`}
-              >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center border-2 transition-all ${isActive ? 'border-brand-500 bg-brand-50 shadow-lg shadow-brand-500/10' : isDone ? 'border-emerald-500 bg-emerald-50' : 'border-slate-100 group-hover:border-slate-300'}`}>
-                  {isDone ? <CheckCircle2 className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
-                </div>
-                <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'opacity-100' : 'opacity-60'}`}>
-                  {step.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* CONTENT AREA */}
-        <div className="flex-1 overflow-y-auto p-10">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentStep}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-              className="max-w-4xl mx-auto space-y-12"
+        {/* MAIN CONTENT AREA */}
+        <div className="flex-1 flex flex-col min-w-0 bg-white">
+          {/* HEADER (MOBILE ONLY TITLE / DESKTOP CLOSE ONLY) */}
+          <div className="px-10 py-6 border-b border-slate-50 flex items-center justify-between">
+            <div className="md:hidden">
+              <h2 className="text-lg font-black text-slate-950 uppercase tracking-tighter">{STEPS[currentStep].label}</h2>
+            </div>
+            <div className="hidden md:flex items-center gap-3">
+               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Editando Registro Seguro</span>
+            </div>
+            <button 
+              onClick={onClose}
+              className="w-10 h-10 bg-white border border-slate-100 text-slate-400 rounded-full flex items-center justify-center hover:text-slate-950 hover:border-slate-300 transition-all active:scale-90"
             >
-              {currentStep === 0 && (
-                <div className="space-y-10">
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-black text-brand-600 uppercase tracking-widest flex items-center gap-3">
-                      <Search className="w-4 h-4" /> Queixa Principal & Motivo do Atendimento
-                    </label>
-                    <textarea 
-                      value={formData.main_complaint}
-                      onChange={e => setFormData({...formData, main_complaint: e.target.value})}
-                      placeholder="Descreva o que trouxe o paciente à terapia neste momento..."
-                      className="w-full p-8 bg-slate-50 rounded-[2rem] border-none outline-none font-bold text-slate-700 min-h-[160px] text-lg focus:ring-4 focus:ring-brand-500/5 transition-all"
-                    />
-                  </div>
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">História do Problema & Antecedentes</label>
-                    <textarea 
-                      value={formData.patient_history}
-                      onChange={e => setFormData({...formData, patient_history: e.target.value})}
-                      placeholder="Início dos sintomas, evolução, eventos marcantes..."
-                      className="w-full p-8 bg-slate-50 rounded-[2rem] border-none outline-none font-bold text-slate-700 min-h-[200px] text-lg focus:ring-4 focus:ring-brand-500/5 transition-all"
-                    />
-                  </div>
-                </div>
-              )}
+              <X className="w-5 h-5" />
+            </button>
+          </div>
 
-              {currentStep === 1 && (
-                <div className="space-y-10">
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-black text-brand-600 uppercase tracking-widest">Estrutura e Dinâmica Familiar</label>
-                    <textarea 
-                      value={formData.family_history}
-                      onChange={e => setFormData({...formData, family_history: e.target.value})}
-                      placeholder="Configuração familiar, relacionamentos, histórico de doenças na família..."
-                      className="w-full p-8 bg-slate-50 rounded-[2rem] border-none outline-none font-bold text-slate-700 min-h-[250px] text-lg focus:ring-4 focus:ring-brand-500/5 transition-all"
-                    />
+          <div className="flex-1 overflow-y-auto p-6 md:p-14">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentStep}
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2 }}
+                className="max-w-5xl mx-auto space-y-12"
+              >
+                {currentStep === 0 && (
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
+                    <div className="space-y-4 xl:col-span-2">
+                      <label className="text-[10px] font-black text-brand-600 uppercase tracking-widest flex items-center gap-3">
+                        <Search className="w-4 h-4" /> Queixa Principal
+                      </label>
+                      <textarea 
+                        value={formData.main_complaint}
+                        onChange={e => setFormData({...formData, main_complaint: e.target.value})}
+                        placeholder="Descreva o que trouxe o paciente à terapia..."
+                        className="w-full p-8 bg-slate-50 rounded-[2rem] border-none outline-none font-bold text-slate-700 min-h-[140px] text-lg focus:ring-4 focus:ring-brand-500/5 transition-all"
+                      />
+                    </div>
+                    <div className="space-y-4 xl:col-span-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">História do Problema & Evolução dos Sintomas</label>
+                      <textarea 
+                        value={formData.patient_history}
+                        onChange={e => setFormData({...formData, patient_history: e.target.value})}
+                        placeholder="Início dos sintomas, evolução, eventos marcantes..."
+                        className="w-full p-8 bg-slate-50 rounded-[2rem] border-none outline-none font-bold text-slate-700 min-h-[220px] text-lg focus:ring-4 focus:ring-brand-500/5 transition-all"
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Relacionamentos Atuais</label>
-                    <textarea 
-                      value={formData.expectations}
-                      onChange={e => setFormData({...formData, expectations: e.target.value})}
-                      placeholder="Rede de apoio, amigos, vida conjugal..."
-                      className="w-full p-8 bg-slate-50 rounded-[2rem] border-none outline-none font-bold text-slate-700 min-h-[150px] text-lg focus:ring-4 focus:ring-brand-500/5 transition-all"
-                    />
+                )}
+
+                {currentStep === 1 && (
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-black text-brand-600 uppercase tracking-widest">Dinâmica Familiar</label>
+                      <textarea 
+                        value={formData.family_history}
+                        onChange={e => setFormData({...formData, family_history: e.target.value})}
+                        placeholder="Configuração familiar, relacionamentos..."
+                        className="w-full p-6 bg-slate-50 rounded-[2rem] border-none outline-none font-bold text-slate-700 min-h-[300px] text-base focus:ring-4 focus:ring-brand-500/5 transition-all"
+                      />
+                    </div>
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Expectativas & Relacionamentos</label>
+                      <textarea 
+                        value={formData.expectations}
+                        onChange={e => setFormData({...formData, expectations: e.target.value})}
+                        placeholder="Rede de apoio e expectativas com o tratamento..."
+                        className="w-full p-6 bg-slate-50 rounded-[2rem] border-none outline-none font-bold text-slate-700 min-h-[300px] text-base focus:ring-4 focus:ring-brand-500/5 transition-all"
+                      />
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {currentStep === 2 && (
                 <div className="space-y-12">
@@ -304,6 +322,7 @@ export default function AnamnesisModule({ patient, onClose, onSave }: AnamnesisM
               )}
             </motion.div>
           </AnimatePresence>
+          </div>
         </div>
 
         {/* FOOTER */}
