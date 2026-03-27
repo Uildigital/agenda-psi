@@ -50,6 +50,12 @@ export default function PatientDetails() {
     } else {
       setPrivacyMode(true); 
     }
+
+    // Auto-open SOAP if coming from Agenda finalization
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('newRecord') === 'true') {
+      setShowNewRecord(true);
+    }
   }, [id]);
 
   const togglePrivacy = () => {

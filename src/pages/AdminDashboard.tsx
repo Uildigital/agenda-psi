@@ -100,6 +100,14 @@ export default function AdminDashboard() {
 
   const revenueProgress = expectedMonthlyRevenue > 0 ? Math.round((currentMonthRevenue / expectedMonthlyRevenue) * 100) : 0;
 
+  // Real Retention Rate (Patients with > 1 appointment)
+  const patientsWithAppointments = new Set(appointments.map(a => a.whatsapp)).size;
+  const returningPatients = patients.filter(p => {
+    const count = appointments.filter(a => a.whatsapp === p.whatsapp).length;
+    return count > 1;
+  }).length;
+  const retentionRate = patientsWithAppointments > 0 ? Math.round((returningPatients / patientsWithAppointments) * 100) : 0;
+
   const formatCurrency = (val: number) => {
     if (privacyMode) return 'R$ ••••••';
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
@@ -238,7 +246,7 @@ export default function AdminDashboard() {
                    </div>
                 </div>
                 <div className="flex items-center gap-5">
-                   <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-[1.5rem] flex items-center justify-center font-black">94%</div>
+                   <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-[1.5rem] flex items-center justify-center font-black">{retentionRate}%</div>
                    <div>
                       <p className="text-sm font-black text-slate-900 uppercase">Taxa de Adesão</p>
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Retenção Ativa</p>

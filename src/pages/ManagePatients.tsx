@@ -46,26 +46,48 @@ export default function ManagePatients() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Get all appointments without patient_id
+    // 1. Pegar todos os agendamentos para extrair pacientes únicos
     const { data: appts } = await supabase
       .from('appointments')
-      .select('patient_name, whatsapp')
+      .select('id, patient_name, whatsapp')
       .eq('doctor_id', user.id);
     
     if (appts) {
-      const unique = Array.from(new Set(appts.map(a => JSON.stringify({ n: a.patient_name, w: a.whatsapp }))));
-      for (const item of unique) {
-        const { n, w } = JSON.parse(item);
-        await supabase.from('patients').upsert({
-          doctor_id: user.id,
-          full_name: n,
-          whatsapp: w
-        }, { onConflict: 'doctor_id,whatsapp' });
+      // Usar Map para garantir unicidade por WhatsApp
+      const patientMap = new Map();
+      appts.forEach(a => {
+        if (!a.whatsapp) return;
+        if (!patientMap.has(a.whatsapp)) {
+          patientMap.set(a.whatsapp, a.patient_name);
+        }
+      });
+
+      for (const [whatsapp, name] of patientMap) {
+        // Inserir ou Pegar Paciente
+        const { data: ptData } = await supabase
+          .from('patients')
+          .upsert({
+            doctor_id: user.id,
+            full_name: name,
+            whatsapp: whatsapp
+          }, { onConflict: 'doctor_id,whatsapp' })
+          .select()
+          .single();
+
+        if (ptData) {
+          // VINCULAR: Atualizar appointments para apontar p/ o novo ID de paciente
+          await supabase
+            .from('appointments')
+            .update({ patient_id: ptData.id })
+            .eq('doctor_id', user.id)
+            .eq('whatsapp', whatsapp);
+        }
       }
     }
     
     await fetchPatients();
     setSyncing(false);
+    alert('Sincronização Concluída! Todos os agendamentos foram vinculados aos prontuários.');
   };
 
   const handleExportCSV = () => {

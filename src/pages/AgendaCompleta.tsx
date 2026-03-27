@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
-import type { Appointment, Patient } from '../types';
+import type { Appointment, Patient, DoctorProfile } from '../types';
 import { 
   Calendar, 
   Search, 
@@ -23,6 +23,7 @@ export default function AgendaCompleta() {
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [profile, setProfile] = useState<DoctorProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,7 +32,8 @@ export default function AgendaCompleta() {
   const [showFinishModal, setShowFinishModal] = useState<Appointment | null>(null);
   const [finishData, setFinishData] = useState({
     payment_status: 'paid' as 'paid' | 'unpaid',
-    payment_method: 'pix' as 'pix' | 'money' | 'card' | 'other'
+    payment_method: 'pix' as 'pix' | 'money' | 'card' | 'other',
+    price: 160
   });
 
   useEffect(() => {
@@ -45,10 +47,26 @@ export default function AgendaCompleta() {
 
     const { data: appts } = await supabase.from('appointments').select('*').eq('doctor_id', user.id);
     const { data: pts } = await supabase.from('patients').select('*').eq('doctor_id', user.id);
+    const { data: prof } = await supabase.from('profiles').select('*').eq('id', user.id).single();
     
     if (appts) setAppointments(appts as Appointment[]);
     if (pts) setPatients(pts as Patient[]);
+    if (prof) setProfile(prof as DoctorProfile);
     setLoading(false);
+  };
+
+  const getPrice = (appt: Appointment) => {
+    if (appt.price) return appt.price;
+    const pt = patients.find(p => p.id === appt.patient_id || p.whatsapp === appt.whatsapp);
+    return pt?.base_session_value || profile?.default_session_value || 160;
+  };
+
+  const handleOpenFinishModal = (appt: Appointment) => {
+    setFinishData({
+       ...finishData,
+       price: getPrice(appt)
+    });
+    setShowFinishModal(appt);
   };
 
   const filteredAppointments = appointments.filter(a => {
@@ -65,14 +83,24 @@ export default function AgendaCompleta() {
       .update({
         status: 'finished',
         payment_status: finishData.payment_status,
-        payment_method: finishData.payment_method
+        payment_method: finishData.payment_method,
+        price: finishData.price
       })
       .eq('id', showFinishModal.id);
 
     if (!error) {
        setAppointments(prev => prev.map(a => a.id === showFinishModal.id ? { ...a, status: 'finished', ...finishData } : a));
+       
+       const pt = patients.find(p => p.id === showFinishModal.patient_id || p.whatsapp === showFinishModal.whatsapp);
+       
+       if (window.confirm('Sessão finalizada! Deseja registrar a evolução clínica (SOAP) agora?')) {
+          if (pt) {
+             navigate(`/admin/pacientes/${pt.id}?newRecord=true`);
+          } else {
+             alert('Paciente não vinculado. Acesse o prontuário via aba Pacientes.');
+          }
+       }
        setShowFinishModal(null);
-       alert('Sessão finalizada e faturamento registrado!');
     }
   };
 
@@ -163,7 +191,7 @@ export default function AgendaCompleta() {
                       <div className="flex items-center gap-3 w-full sm:w-auto relative z-10 pt-4 sm:pt-0 border-t sm:border-t-0 border-slate-50">
                          {a.status !== 'finished' && (
                             <button 
-                              onClick={() => setShowFinishModal(a)}
+                              onClick={() => handleOpenFinishModal(a)}
                               className="flex-1 sm:flex-none h-14 px-6 bg-brand-50 text-brand-700 font-black text-[10px] rounded-2xl hover:bg-brand-600 hover:text-white transition-all uppercase tracking-widest shadow-sm active:scale-95"
                             >
                                FINALIZAR
@@ -203,7 +231,17 @@ export default function AgendaCompleta() {
                 <div className="p-8 space-y-8">
                    <div className="text-center">
                       <p className="text-xs font-black text-brand-600 uppercase tracking-widest mb-2">PACIENTE</p>
-                      <h4 className="text-3xl font-black text-slate-950 uppercase tracking-tighter">{showFinishModal.patient_name}</h4>
+                      <h4 className="text-3xl font-black text-slate-950 uppercase tracking-tighter mb-4">{showFinishModal.patient_name}</h4>
+                      
+                      <div className="flex flex-col items-center gap-1">
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Valor Cobrado (R$)</label>
+                         <input 
+                           type="number" 
+                           value={finishData.price} 
+                           onChange={e => setFinishData({...finishData, price: Number(e.target.value)})}
+                           className="bg-slate-50 border-none font-black text-3xl text-center text-slate-900 focus:ring-0 w-32 rounded-xl"
+                         />
+                      </div>
                    </div>
 
                    <div className="space-y-4">
